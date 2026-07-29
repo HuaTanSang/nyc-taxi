@@ -1,0 +1,38 @@
+services:
+  dbt:
+    build:
+      context: .
+      dockerfile: dockerfile.dbt
+
+    container_name: dbt
+
+    env_file:
+      - ../.env
+
+    ports:
+      - "8050:8050"
+
+    volumes:
+      - ../../dbt_project:/usr/app/dbt
+
+    working_dir: /usr/app/dbt
+
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+
+    command: >
+      bash -c "
+      dbt deps &&
+      dbt docs generate &&
+      dbt docs serve
+      --host 0.0.0.0
+      --port 8050
+      "
+
+    networks:
+      - platform_net
+
+networks:
+  platform_net:
+    external: true
+    name: platform_net

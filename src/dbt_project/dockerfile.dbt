@@ -1,0 +1,20 @@
+FROM apache/airflow:3.2.2-python3.12
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* 
+    
+
+WORKDIR /opt/airflow
+
+USER airflow
+
+COPY airflow-requirements.txt .
+# TODO: Need to update with uv
+RUN pip install --no-cache-dir \
+    -r airflow-requirements.txt \
+    && pip install --extra-index-url https://vnstocks.com/api/simple vnstock_chart
+    

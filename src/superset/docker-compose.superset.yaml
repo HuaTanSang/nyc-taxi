@@ -1,0 +1,26 @@
+services:
+  superset:
+    build:
+      context: .
+      dockerfile: dockerfile.superset
+    container_name: superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=your_secret_key_here
+      - SUPERSET_ENV=production    
+      - FLASK_APP=superset         
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0             
+    networks:
+      - platform_net
+    command: >
+      bash -c "superset db upgrade &&
+               superset fab create-admin --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin &&
+               superset init &&
+               gunicorn -w 2 --timeout 120 -b  0.0.0.0:8088 --limit-request-line 0 --limit-request-field_size 0 'superset.app:create_app()'"
+
+networks:
+  platform_net:
+    external: true
+    name: platform_net
