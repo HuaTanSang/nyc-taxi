@@ -1,0 +1,152 @@
+services:
+  postgres:
+    image: postgres:16.9
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nyc-taxi-airflow:latest
+    container_name: airflow-init
+    env_file:
+      - .env
+    environment: &airflow-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_API_JWT_SECRET}
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USERNAME}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    user: "${AIRFLOW_UID}:0"
+    volumes: &airflow-volumes
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./config:/opt/airflow/config
+      - ./utils:/opt/airflow/utils
+    command: version
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - platform_net
+
+  airflow-apiserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nyc-taxi-airflow:latest
+    container_name: airflow-apiserver
+    env_file:
+      - .env
+    environment: *airflow-env
+    user: "${AIRFLOW_UID}:0"
+    volumes: *airflow-volumes
+    command: api-server
+    ports:
+      - "${AIRFLOW_WEB_PORT}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+  airflow-scheduler:
+    image: nyc-taxi-airflow:latest
+    container_name: airflow-scheduler
+    env_file:
+      - .env
+    environment: *airflow-env
+    user: "${AIRFLOW_UID}:0"
+    volumes: *airflow-volumes
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+  airflow-dag-processor:
+    image: nyc-taxi-airflow:latest
+    container_name: airflow-dag-processor
+    env_file:
+      - .env
+    environment: *airflow-env
+    user: "${AIRFLOW_UID}:0"
+    volumes: *airflow-volumes
+    command: dag-processor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+  airflow-triggerer:
+    image: nyc-taxi-airflow:latest
+    container_name: airflow-triggerer
+    env_file:
+      - .env
+    environment: *airflow-env
+    user: "${AIRFLOW_UID}:0"
+    volumes: *airflow-volumes
+    command: triggerer
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+volumes:
+  airflow_postgres_data:
+
+networks:
+  platform_net:
+    external: true
+    name: platform_net

@@ -1,0 +1,23 @@
+FROM ghcr.io/astral-sh/uv:latest AS uv
+
+FROM python:3.14
+
+COPY --from=uv /uv /uvx /bin/
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/app/dbt
+
+COPY ../../dbt_project/ /usr/app/dbt/
+
+RUN uv venv /opt/venv \
+    && uv pip install --python /opt/venv/bin/python \
+        dbt-core \
+        dbt-clickhouse
+
+ENV PATH="/opt/venv/bin:$PATH"
+ENV DBT_PROFILES_DIR=/usr/app/dbt
+
+CMD ["dbt", "--version"]

@@ -1,0 +1,108 @@
+x-superset-common: &superset-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: nyc-taxi-superset:${SUPERSET_VERSION}
+  env_file:
+    - .env
+  environment:
+    SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    SUPERSET_DATABASE_URI: >-
+      postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@superset-db:5432/${POSTGRES_DB}
+    SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+  networks:
+    - platform_net
+
+services:
+  superset-db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: superset-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - superset_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - platform_net
+
+  superset-init:
+    <<: *superset-common
+    container_name: superset-init
+    depends_on:
+      superset-db:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+
+        superset db upgrade
+
+        superset fab create-admin \
+          --username "$${ADMIN_USERNAME}" \
+          --firstname "$${ADMIN_FIRSTNAME}" \
+          --lastname "$${ADMIN_LASTNAME}" \
+          --email "$${ADMIN_EMAIL}" \
+          --password "$${ADMIN_PASSWORD}" \
+        || echo "Admin account already exists."
+
+        superset init
+    restart: "no"
+
+  superset:
+    <<: *superset-common
+    container_name: superset
+    depends_on:
+      superset-db:
+        condition: service_healthy
+      superset-init:
+        condition: service_completed_successfully
+    ports:
+      - "${SUPERSET_PORT}:8088"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        exec gunicorn \
+          --bind "0.0.0.0:8088" \
+          --workers 2 \
+          --worker-class gthread \
+          --threads 4 \
+          --timeout 120 \
+          --access-logfile - \
+          --error-logfile - \
+          "superset.app:create_app()"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8088/health')\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  superset_postgres_data:
+
+networks:
+  platform_net:
+    external: true
+    name: platform_net

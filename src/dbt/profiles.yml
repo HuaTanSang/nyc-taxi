@@ -1,0 +1,13 @@
+dbt_project:
+  target: dev
+
+  outputs:
+    dev:
+      type: clickhouse
+      host: clickhouse
+      port: 8123
+      user: "{{ env_var('CLICKHOUSE_USER') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      schema: raw
+      secure: false
+      verify: false
