@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# logs
+src/airflow/logs
+src/dbt/logs
+src/dbt/dbt_packages/dbt_utils
