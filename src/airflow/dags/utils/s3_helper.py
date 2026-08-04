@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 import requests
-from airflow.dags.utils.utils import _build_filename, build_source_url
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from botocore.exceptions import ClientError
 from common.constants import (
@@ -12,6 +11,7 @@ from common.constants import (
     RAW_BUCKET_NAME,
     S3_CONNECTION_ID,
 )
+from utils.utils import _build_filename, build_source_url
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,27 @@ def _existing_object_is_valid(metadata: dict[str, Any] | None) -> bool:
 
 def build_object_key(taxi_type: str, year: int, month: int) -> str:
     filename = _build_filename(taxi_type, year, month)
-    return f"nyc_taxi/{taxi_type}/year={year}/month={month:02d}/{filename}"
+    return f"{taxi_type}/year={year}/month={month:02d}/{filename}"
+
+
+def get_minio_hook(minio_conn_id: str = S3_CONNECTION_ID) -> S3Hook:
+    """
+    Getting MinIO connection, add Airflow Connection before calling this function
+    Args:
+    - minio_conn_id: (str) id of minio connection
+    Returns:
+    - S3Hook
+    """
+    s3_hook = S3Hook(
+        aws_conn_id=minio_conn_id,
+        transfer_config_args={
+            "multipart_threshold": MULTIPART_CHUNK_SIZE,
+            "multipart_chunksize": MULTIPART_CHUNK_SIZE,
+            "max_concurrency": 1,
+            "use_threads": False,
+        },
+    )
+    return s3_hook
 
 
 def stream_taxi_month_to_minio(
@@ -58,15 +78,7 @@ def stream_taxi_month_to_minio(
     source_url = build_source_url(taxi_type, year, month)
     object_key = build_object_key(taxi_type, year, month)
 
-    s3_hook = S3Hook(
-        aws_conn_id=S3_CONNECTION_ID,
-        transfer_config_args={
-            "multipart_threshold": MULTIPART_CHUNK_SIZE,
-            "multipart_chunksize": MULTIPART_CHUNK_SIZE,
-            "max_concurrency": 1,
-            "use_threads": False,
-        },
-    )
+    s3_hook = get_minio_hook()
 
     _ensure_bucket(s3_hook, RAW_BUCKET_NAME)
 
