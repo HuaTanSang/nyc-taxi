@@ -1,0 +1,476 @@
+version: 2
+
+models:
+  - name: fct_yellow_taxi
+    description: >-
+      Atomic Yellow Taxi fact. One row represents one source trip record from
+      one monthly TLC object.
+    columns:
+      - name: trip_sk
+        description: Deterministic surrogate key for the source trip record.
+        data_tests: [not_null, unique]
+      - name: vendor_id
+        description: TLC technology-provider code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_vendor')
+                field: vendor_id
+              config:
+                severity: warn
+      - name: rate_code_id
+        description: Final metered-rate code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_rate_code')
+                field: rate_code_id
+              config:
+                severity: warn
+      - name: payment_type_id
+        description: Passenger payment-type code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_payment_type')
+                field: payment_type_id
+              config:
+                severity: warn
+      - name: pickup_datetime
+        description: Timestamp when the meter was engaged.
+      - name: dropoff_datetime
+        description: Timestamp when the meter was disengaged.
+      - name: pickup_date_id
+        description: Pickup date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: dropoff_date_id
+        description: Drop-off date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: dropoff_location_id
+        description: Drop-off TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: trip_distance_miles
+        description: Taximeter-reported distance in miles.
+      - name: passenger_count
+        description: Driver-entered passenger count.
+      - name: fare_amount
+        description: Time-and-distance fare calculated by the meter.
+      - name: extra
+        description: Miscellaneous extras and surcharges.
+      - name: mta_tax
+        description: MTA tax assessed for the trip.
+      - name: tip_amount
+        description: Reported credit-card tip; cash tips are not included.
+      - name: tolls_amount
+        description: Total tolls paid during the trip.
+      - name: improvement_surcharge
+        description: Improvement surcharge assessed at flag drop.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed for the trip.
+      - name: airport_fee
+        description: Airport pickup fee where applicable.
+      - name: total_amount
+        description: Total passenger charge excluding cash tips.
+      - name: trip_duration_seconds
+        description: Drop-off minus pickup time in seconds.
+      - name: source_file_id
+        description: Full source object path used as a stable lineage identifier.
+        data_tests: [not_null]
+      - name: source_row_number
+        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
+        data_tests: [not_null]
+      - name: source_year
+        description: Year of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]
+
+  - name: fct_green_taxi
+    description: >-
+      Atomic Green Taxi fact. One row represents one source trip record from
+      one monthly TLC object.
+    columns:
+      - name: trip_sk
+        description: Deterministic surrogate key for the source trip record.
+        data_tests: [not_null, unique]
+      - name: vendor_id
+        description: TLC technology-provider code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_vendor')
+                field: vendor_id
+              config:
+                severity: warn
+      - name: rate_code_id
+        description: Final metered-rate code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_rate_code')
+                field: rate_code_id
+              config:
+                severity: warn
+      - name: payment_type_id
+        description: Passenger payment-type code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_payment_type')
+                field: payment_type_id
+              config:
+                severity: warn
+      - name: trip_type_id
+        description: Street-hail or dispatch trip-type code.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_trip_type')
+                field: trip_type_id
+              config:
+                severity: warn
+      - name: pickup_datetime
+        description: Timestamp when the meter was engaged.
+      - name: dropoff_datetime
+        description: Timestamp when the meter was disengaged.
+      - name: pickup_date_id
+        description: Pickup date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: dropoff_date_id
+        description: Drop-off date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: dropoff_location_id
+        description: Drop-off TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: trip_distance_miles
+        description: Taximeter-reported distance in miles.
+      - name: passenger_count
+        description: Driver-entered passenger count.
+      - name: fare_amount
+        description: Time-and-distance fare calculated by the meter.
+      - name: extra
+        description: Miscellaneous extras and surcharges.
+      - name: mta_tax
+        description: MTA tax assessed for the trip.
+      - name: tip_amount
+        description: Reported credit-card tip; cash tips are not included.
+      - name: tolls_amount
+        description: Total tolls paid during the trip.
+      - name: ehail_fee
+        description: Electronic-hail fee when reported; currently unused by TLC.
+      - name: improvement_surcharge
+        description: Improvement surcharge assessed at flag drop.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed for the trip.
+      - name: airport_fee
+        description: >-
+          Reserved conformed measure. Null because the current Green staging
+          source does not supply an airport-fee column.
+      - name: total_amount
+        description: Total passenger charge excluding cash tips.
+      - name: trip_duration_seconds
+        description: Drop-off minus pickup time in seconds.
+      - name: source_file_id
+        description: Full source object path used as a stable lineage identifier.
+        data_tests: [not_null]
+      - name: source_row_number
+        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
+        data_tests: [not_null]
+      - name: source_year
+        description: Year of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]
+
+  - name: fct_fhv_taxi
+    description: >-
+      Atomic FHV dispatch fact. One row represents one source dispatch record;
+      the TLC source does not provide distance or fare measures.
+    columns:
+      - name: trip_sk
+        description: Deterministic surrogate key for the source dispatch record.
+        data_tests: [not_null, unique]
+      - name: dispatching_base_number
+        description: TLC base that dispatched the trip.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_fhv_base')
+                field: base_number
+              config:
+                severity: warn
+      - name: affiliated_base_number
+        description: TLC base affiliated with the vehicle for the trip.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_fhv_base')
+                field: base_number
+              config:
+                severity: warn
+      - name: pickup_datetime
+        description: Timestamp when the passenger entered the vehicle.
+      - name: dropoff_datetime
+        description: Timestamp when the passenger exited the vehicle.
+      - name: pickup_date_id
+        description: Pickup date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: dropoff_date_id
+        description: Drop-off date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: dropoff_location_id
+        description: Drop-off TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: shared_ride_flag
+        description: Nullable normalization of the TLC SR_Flag field.
+      - name: trip_duration_seconds
+        description: Drop-off minus pickup time in seconds.
+      - name: source_file_id
+        description: Full source object path used as a stable lineage identifier.
+        data_tests: [not_null]
+      - name: source_row_number
+        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
+        data_tests: [not_null]
+      - name: source_year
+        description: Year of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]
+
+  - name: fct_fhvhv_taxi
+    description: >-
+      Atomic High Volume FHV trip fact. One row represents one TLC FHVHV trip
+      record from one monthly source object.
+    columns:
+      - name: trip_sk
+        description: Deterministic surrogate key for the source trip record.
+        data_tests: [not_null, unique]
+      - name: hvfhs_license_number
+        description: TLC High Volume FHV provider license.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_hvfhv_provider')
+                field: hvfhs_license_number
+              config:
+                severity: warn
+      - name: original_base_number
+        description: TLC base that received the original passenger request.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_fhv_base')
+                field: base_number
+              config:
+                severity: warn
+      - name: dispatching_base_number
+        description: TLC base that dispatched the trip.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_fhv_base')
+                field: base_number
+              config:
+                severity: warn
+      - name: request_datetime
+        description: Timestamp when the passenger requested pickup.
+      - name: on_scene_datetime
+        description: Timestamp when the driver arrived at pickup, where reported.
+      - name: pickup_datetime
+        description: Timestamp when the passenger entered the vehicle.
+      - name: dropoff_datetime
+        description: Timestamp when the passenger exited the vehicle.
+      - name: request_date_id
+        description: Request date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: on_scene_date_id
+        description: On-scene date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: pickup_date_id
+        description: Pickup date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: dropoff_date_id
+        description: Drop-off date key formatted as YYYYMMDD.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id
+              config:
+                severity: warn
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: dropoff_location_id
+        description: Drop-off TLC Taxi Zone identifier.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_taxi_zone')
+                field: location_id
+              config:
+                severity: warn
+      - name: shared_request_flag
+        description: Whether the passenger agreed to a shared or pooled ride.
+      - name: shared_match_flag
+        description: Whether a separately booked passenger shared the vehicle.
+      - name: access_a_ride_flag
+        description: Whether the trip was administered for MTA Access-A-Ride.
+      - name: wav_request_flag
+        description: Whether a wheelchair-accessible vehicle was requested.
+      - name: wav_match_flag
+        description: Whether the trip used a wheelchair-accessible vehicle.
+      - name: trip_miles
+        description: Provider-reported passenger trip miles.
+      - name: reported_trip_time_seconds
+        description: Provider-reported passenger trip duration.
+      - name: base_passenger_fare
+        description: Base fare before tolls, tips, taxes, and fees.
+      - name: tolls
+        description: Total tolls paid during the trip.
+      - name: bcf
+        description: Amount collected for the Black Car Fund.
+      - name: sales_tax
+        description: NYS sales tax collected for the trip.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: airport_fee
+        description: Airport pickup or drop-off fee where applicable.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed for the trip.
+      - name: tips
+        description: Provider-reported passenger tips.
+      - name: driver_pay
+        description: Driver pay excluding tolls and tips and net of deductions.
+      - name: calculated_trip_duration_seconds
+        description: Drop-off minus pickup time in seconds.
+      - name: request_to_pickup_seconds
+        description: Pickup time minus passenger request time in seconds.
+      - name: request_to_on_scene_seconds
+        description: Driver on-scene time minus request time in seconds.
+      - name: on_scene_to_pickup_seconds
+        description: Pickup time minus driver on-scene time in seconds.
+      - name: source_file_id
+        description: Full source object path used as a stable lineage identifier.
+        data_tests: [not_null]
+      - name: source_row_number
+        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
+        data_tests: [not_null]
+      - name: source_year
+        description: Year of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]

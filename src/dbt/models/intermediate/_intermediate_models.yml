@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: int_trips_unioned
+    description: >-
+      Narrow conformed union of the four core facts for shared daily and zone
+      marts. Missing source measures remain null rather than being imputed.
+    columns:
+      - name: service_type
+        description: TLC service family represented by the row.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhv, fhvhv]
+      - name: trip_sk
+        description: Surrogate trip key from the originating core fact.
+        data_tests:
+          - not_null
+      - name: source_year
+        description: Year of the monthly source object.
+        data_tests:
+          - not_null
+      - name: source_month
+        description: Month of the monthly source object.
+        data_tests:
+          - not_null
+      - name: pickup_date_id
+        description: Integer pickup date key formatted as YYYYMMDD.
+      - name: pickup_datetime
+        description: Passenger pickup timestamp.
+      - name: dropoff_datetime
+        description: Passenger drop-off timestamp.
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+      - name: dropoff_location_id
+        description: Drop-off TLC Taxi Zone identifier.
+      - name: passenger_count
+        description: Driver-reported passenger count when supplied by the service.
+      - name: trip_distance_miles
+        description: Reported passenger trip distance when supplied by the service.
+      - name: trip_duration_seconds
+        description: Duration calculated from pickup to drop-off.
+      - name: passenger_charge_amount
+        description: >-
+          Yellow/Green total_amount or calculated FHVHV passenger charge. Null
+          for FHV because the source does not report fare components.
+      - name: tip_amount
+        description: Reported non-cash tip; null when the source does not provide it.

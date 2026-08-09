@@ -1,0 +1,163 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: >-
+      Shared calendar dimension. One row represents one calendar date between
+      calendar_start_date and calendar_end_date.
+    columns:
+      - name: date_id
+        description: Integer date key formatted as YYYYMMDD.
+        data_tests:
+          - not_null
+          - unique
+      - name: full_date
+        description: Calendar date represented by the row.
+        data_tests:
+          - not_null
+          - unique
+      - name: year
+        description: Four-digit calendar year.
+      - name: quarter
+        description: Calendar quarter from 1 through 4.
+      - name: month
+        description: Calendar month number from 1 through 12.
+      - name: month_name
+        description: English calendar month name.
+      - name: day_of_month
+        description: Day number within the month.
+      - name: day_of_week
+        description: ISO weekday number where Monday is 1 and Sunday is 7.
+      - name: day_name
+        description: English weekday name.
+      - name: week_of_year
+        description: ISO week number.
+      - name: is_weekend
+        description: True for Saturday and Sunday.
+      - name: is_holiday
+        description: >-
+          True on the actual date of a common US federal calendar holiday;
+          observed weekday closures are not shifted into this flag.
+      - name: holiday_name
+        description: Holiday name when is_holiday is true, otherwise null.
+
+  - name: dim_vendor
+    description: TLC TPEP/LPEP technology-provider code dimension.
+    columns:
+      - name: vendor_id
+        description: TLC vendor code.
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 6, 7]
+      - name: vendor_name
+        description: Provider business name from the 2025 TLC dictionary.
+      - name: description
+        description: Business definition of the vendor code.
+
+  - name: dim_rate_code
+    description: Final metered-rate code dimension shared by Yellow and Green Taxi.
+    columns:
+      - name: rate_code_id
+        description: TLC rate code.
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6, 99]
+      - name: rate_code_name
+        description: Human-readable rate-code name.
+      - name: description
+        description: Business definition of the rate code.
+
+  - name: dim_payment_type
+    description: Passenger payment-type dimension shared by Yellow and Green Taxi.
+    columns:
+      - name: payment_type_id
+        description: TLC payment code.
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6]
+      - name: payment_type_name
+        description: Human-readable payment type.
+      - name: description
+        description: Business definition and relevant source caveats.
+
+  - name: dim_taxi_zone
+    description: Conformed NYC TLC Taxi Zone lookup used by every trip fact.
+    columns:
+      - name: location_id
+        description: TLC Taxi Zone identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: borough
+        description: Borough associated with the taxi zone.
+      - name: zone
+        description: TLC Taxi Zone name.
+      - name: service_zone
+        description: TLC service-zone grouping.
+
+  - name: dim_trip_type
+    description: Green Taxi street-hail versus dispatch classification.
+    columns:
+      - name: trip_type_id
+        description: TLC Green Taxi trip-type code.
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2]
+      - name: trip_type_name
+        description: Human-readable trip type.
+      - name: description
+        description: Business definition of the trip type.
+
+  - name: dim_hvfhv_provider
+    description: TLC High Volume For-Hire Service license dimension.
+    columns:
+      - name: hvfhs_license_number
+        description: TLC HVFHS license number.
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [HV0002, HV0003, HV0004, HV0005]
+      - name: provider_name
+        description: Provider brand associated with the TLC license.
+      - name: description
+        description: Business definition of the provider license.
+
+  - name: dim_fhv_base
+    description: >-
+      Accumulating inferred list of FHV base numbers observed in FHV and FHVHV
+      trip files. Descriptive attributes remain null until a TLC base-master
+      source is added.
+    columns:
+      - name: base_number
+        description: TLC base license number.
+        data_tests:
+          - not_null
+          - unique
+      - name: base_name
+        description: Base name; currently null because no base-master source exists.
+      - name: base_type
+        description: Base classification; currently null.
+      - name: address
+        description: Base street address; currently null.
+      - name: city
+        description: Base city; currently null.
+      - name: state
+        description: Base state; currently null.
+      - name: postal_code
+        description: Base postal code; currently null.
+      - name: active_flag
+        description: True when the base has been observed in an ingested trip file.

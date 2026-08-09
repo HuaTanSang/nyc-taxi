@@ -1,0 +1,236 @@
+version: 2
+
+models:
+  - name: mart_trip_daily
+    description: >-
+      Daily cross-service KPI mart. Grain is one source month, pickup date, and
+      service type.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - source_year
+              - source_month
+              - pickup_date_id
+              - service_type
+    columns:
+      - name: source_year
+        description: Year of the monthly source object.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object.
+        data_tests: [not_null]
+      - name: pickup_date_id
+        description: Integer pickup date key formatted as YYYYMMDD.
+      - name: pickup_date
+        description: Calendar pickup date.
+      - name: service_type
+        description: Yellow, Green, FHV, or FHVHV service family.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhv, fhvhv]
+      - name: trip_count
+        description: Number of trip records at the mart grain.
+        data_tests: [not_null]
+      - name: passenger_count_recorded
+        description: Trips for which passenger count is available.
+      - name: total_passengers
+        description: Sum of recorded passenger counts.
+      - name: distance_recorded_count
+        description: Trips for which distance is available.
+      - name: total_distance_miles
+        description: Sum of recorded trip miles.
+      - name: duration_recorded_count
+        description: Trips for which calculated duration is available.
+      - name: total_trip_duration_seconds
+        description: Sum of recorded calculated trip durations.
+      - name: passenger_charge_recorded_count
+        description: Trips for which a passenger charge is available.
+      - name: total_passenger_charge_amount
+        description: Sum of recorded passenger charges.
+      - name: average_passengers
+        description: Average over rows with passenger count available.
+      - name: average_trip_distance_miles
+        description: Average over rows with distance available.
+      - name: average_trip_duration_seconds
+        description: Average over rows with calculated duration available.
+      - name: average_passenger_charge_amount
+        description: Average over rows with a passenger charge available.
+      - name: average_passenger_charge_per_mile
+        description: Passenger charges divided by miles for rows with both values.
+
+  - name: mart_zone_daily
+    description: >-
+      Daily pickup-zone demand and operating KPI mart. Grain is one source
+      month, pickup date, service type, and pickup zone.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - source_year
+              - source_month
+              - pickup_date_id
+              - service_type
+              - pickup_location_id
+    columns:
+      - name: source_year
+        description: Year of the monthly source object.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object.
+        data_tests: [not_null]
+      - name: pickup_date_id
+        description: Integer pickup date key formatted as YYYYMMDD.
+      - name: pickup_date
+        description: Calendar pickup date.
+      - name: service_type
+        description: Yellow, Green, FHV, or FHVHV service family.
+        data_tests: [not_null]
+      - name: pickup_location_id
+        description: Pickup TLC Taxi Zone identifier.
+      - name: pickup_borough
+        description: Pickup borough from dim_taxi_zone.
+      - name: pickup_zone
+        description: Pickup zone name from dim_taxi_zone.
+      - name: pickup_service_zone
+        description: Pickup service-zone grouping from dim_taxi_zone.
+      - name: trip_count
+        description: Number of trip records at the mart grain.
+        data_tests: [not_null]
+      - name: distance_recorded_count
+        description: Trips for which distance is available.
+      - name: total_distance_miles
+        description: Sum of recorded trip miles.
+      - name: duration_recorded_count
+        description: Trips for which calculated duration is available.
+      - name: average_trip_duration_seconds
+        description: Average over rows with calculated duration available.
+      - name: passenger_charge_recorded_count
+        description: Trips for which a passenger charge is available.
+      - name: total_passenger_charge_amount
+        description: Sum of recorded passenger charges.
+      - name: average_passenger_charge_amount
+        description: Average over rows with a passenger charge available.
+
+  - name: mart_street_taxi_payment_daily
+    description: >-
+      Yellow and Green Taxi daily payment and fare mart. Grain is one source
+      month, pickup date, service type, and payment type. Cash tips are absent
+      from TLC trip records and must not be inferred from this mart.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - source_year
+              - source_month
+              - pickup_date_id
+              - service_type
+              - payment_type_id
+    columns:
+      - name: source_year
+        description: Year of the monthly source object.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object.
+        data_tests: [not_null]
+      - name: pickup_date_id
+        description: Integer pickup date key formatted as YYYYMMDD.
+      - name: pickup_date
+        description: Calendar pickup date.
+      - name: service_type
+        description: Yellow or Green Taxi service family.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green]
+      - name: payment_type_id
+        description: TLC passenger payment code.
+      - name: payment_type_name
+        description: Human-readable payment type.
+      - name: trip_count
+        description: Number of trip records at the mart grain.
+        data_tests: [not_null]
+      - name: total_fare_amount
+        description: Sum of time-and-distance fare amounts.
+      - name: total_tip_amount
+        description: Sum of reported tips; excludes unreported cash tips.
+      - name: total_passenger_charge_amount
+        description: Sum of TLC total_amount.
+      - name: average_fare_amount
+        description: Average of non-null fare amounts.
+      - name: average_tip_amount
+        description: Average of non-null reported tips.
+      - name: average_passenger_charge_amount
+        description: Average of non-null TLC total_amount values.
+      - name: tip_to_fare_percent
+        description: Reported tips divided by fare amount when total fare is positive.
+
+  - name: mart_fhvhv_provider_daily
+    description: >-
+      Daily provider operations and economics mart for High Volume FHV. Grain
+      is one source month, pickup date, and HVFHS license.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - source_year
+              - source_month
+              - pickup_date_id
+              - hvfhs_license_number
+    columns:
+      - name: source_year
+        description: Year of the monthly source object.
+        data_tests: [not_null]
+      - name: source_month
+        description: Month of the monthly source object.
+        data_tests: [not_null]
+      - name: pickup_date_id
+        description: Integer pickup date key formatted as YYYYMMDD.
+      - name: pickup_date
+        description: Calendar pickup date.
+      - name: hvfhs_license_number
+        description: TLC High Volume FHV provider license.
+      - name: provider_name
+        description: Provider name from dim_hvfhv_provider.
+      - name: trip_count
+        description: Number of trip records at the mart grain.
+        data_tests: [not_null]
+      - name: total_trip_miles
+        description: Sum of reported passenger trip miles.
+      - name: total_base_passenger_fare
+        description: Sum of reported base passenger fares.
+      - name: total_passenger_charge_amount
+        description: >-
+          Sum of base fare, tolls, BCF, sales tax, surcharges, airport fee, CBD
+          fee, and reported tips.
+      - name: total_tips
+        description: Sum of provider-reported tips.
+      - name: total_driver_pay
+        description: Sum of reported driver pay excluding tolls and tips.
+      - name: average_reported_trip_time_seconds
+        description: Average provider-reported passenger trip time.
+      - name: average_calculated_trip_duration_seconds
+        description: Average duration calculated from pickup to drop-off.
+      - name: average_request_to_pickup_seconds
+        description: Average passenger request-to-pickup time.
+      - name: average_on_scene_to_pickup_seconds
+        description: Average on-scene-to-pickup time when on-scene is reported.
+      - name: average_driver_pay
+        description: Average non-null driver pay.
+      - name: shared_request_count
+        description: Trips for which a shared ride was requested.
+      - name: shared_match_count
+        description: Trips matched with a separately booked passenger.
+      - name: shared_match_rate_percent
+        description: Shared matches divided by shared requests.
+      - name: wav_request_count
+        description: Trips for which a wheelchair-accessible vehicle was requested.
+      - name: wav_match_count
+        description: Trips fulfilled in a wheelchair-accessible vehicle.
+      - name: wav_match_rate_percent
+        description: WAV matches divided by WAV requests.
+      - name: access_a_ride_trip_count
+        description: Trips administered on behalf of MTA Access-A-Ride.

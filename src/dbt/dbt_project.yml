@@ -25,6 +25,8 @@ vars:
   month: 1
   force_reload: false
   airflow_run_id: manual
+  calendar_start_date: "2009-01-01"
+  calendar_end_date: "2030-12-31"
 
 models:
   nyc_taxi:
