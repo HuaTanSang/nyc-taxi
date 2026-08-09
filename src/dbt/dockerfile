@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /usr/app/dbt
 
-COPY ../../dbt_project/ /usr/app/dbt/
+COPY . /usr/app/dbt/
 
 RUN uv venv /opt/venv \
     && uv pip install --python /opt/venv/bin/python \

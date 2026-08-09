@@ -221,3 +221,6 @@ __marimo__/
 src/airflow/logs
 src/dbt/logs
 src/dbt/dbt_packages/dbt_utils
+
+# testing
+test.*

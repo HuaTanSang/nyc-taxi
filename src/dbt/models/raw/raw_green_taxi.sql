@@ -1,15 +1,15 @@
 {{ 
-    table_configuration{
+    table_configuration(
         materialized='view',
         schema='raw',
-        alias='ext_yellow_trips',
-        tags=['raw', 'external', 'yellow_taxi_trips']
-    } 
+        alias='ext_green_trips',
+        tags=['raw', 'external', 'green_taxi_trips']
+    )
 }}
 
 {% set year = var('year') | int %}
 {% set month = var('month') | int %}
-{% set object_key = taxi_object_key('yellow', year, month) %}
+{% set object_key = construct_object_key('green', year, month, 'parquet') %}
 
 
 select
@@ -18,4 +18,4 @@ select
     _file as source_file,
     toUInt16({{ year }}) as source_year,
     toUInt8({{ month }}) as source_month
-from s3_source(object_key)      
+from {{ s3_source(object_key) }}     

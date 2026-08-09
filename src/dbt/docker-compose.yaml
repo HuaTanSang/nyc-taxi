@@ -2,7 +2,7 @@ services:
   dbt:
     build:
       context: .
-      dockerfile: dockerfile.dbt
+      dockerfile: dockerfile       
     image: nyc-taxi-dbt:latest
     container_name: dbt
 

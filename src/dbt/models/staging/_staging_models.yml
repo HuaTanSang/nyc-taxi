@@ -1,0 +1,259 @@
+version: 2
+
+models:
+  - name: stg_yellow_trips
+    description: >-
+      Cleaned, typed Yellow Taxi trip records at one row per source trip.
+      No filtering, deduplication, joins, or business aggregations are applied.
+    columns:
+      - name: vendor_id
+        description: Code identifying the technology provider that submitted the trip record.
+      - name: pickup_datetime
+        description: Date and time when the meter was engaged.
+      - name: dropoff_datetime
+        description: Date and time when the meter was disengaged.
+      - name: passenger_count
+        description: Driver-entered number of passengers in the vehicle.
+      - name: trip_distance
+        description: Trip distance reported by the taximeter in miles.
+      - name: rate_code_id
+        description: Final rate code in effect at the end of the trip.
+      - name: store_and_fwd_flag
+        description: Indicates whether the trip record was stored before being sent to the vendor.
+      - name: pickup_location_id
+        description: TLC Taxi Zone identifier where the meter was engaged.
+      - name: dropoff_location_id
+        description: TLC Taxi Zone identifier where the meter was disengaged.
+      - name: payment_type_id
+        description: Code describing how the passenger paid for the trip.
+      - name: fare_amount
+        description: Time-and-distance fare calculated by the meter.
+      - name: extra
+        description: Miscellaneous extras and surcharges assessed on the trip.
+      - name: mta_tax
+        description: MTA tax assessed based on the metered rate in use.
+      - name: tip_amount
+        description: Automatically populated credit-card tip amount.
+      - name: tolls_amount
+        description: Total tolls paid during the trip.
+      - name: improvement_surcharge
+        description: Improvement surcharge assessed at flag drop.
+      - name: total_amount
+        description: Total amount charged to passengers excluding cash tips.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: airport_fee
+        description: Airport pickup fee assessed where applicable.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed where applicable.
+      - name: source_path
+        description: Full object path from which the raw record was read.
+        tests:
+          - not_null
+      - name: source_file
+        description: Source object filename.
+        tests:
+          - not_null
+      - name: source_year
+        description: Year selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+      - name: source_month
+        description: Month selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+
+  - name: stg_green_trips
+    description: >-
+      Cleaned, typed Green Taxi trip records at one row per source trip.
+      No filtering, deduplication, joins, or business aggregations are applied.
+    columns:
+      - name: vendor_id
+        description: Code identifying the technology provider that submitted the trip record.
+      - name: pickup_datetime
+        description: Date and time when the meter was engaged.
+      - name: dropoff_datetime
+        description: Date and time when the meter was disengaged.
+      - name: store_and_fwd_flag
+        description: Indicates whether the trip record was stored before being sent to the vendor.
+      - name: rate_code_id
+        description: Final rate code in effect at the end of the trip.
+      - name: pickup_location_id
+        description: TLC Taxi Zone identifier where the meter was engaged.
+      - name: dropoff_location_id
+        description: TLC Taxi Zone identifier where the meter was disengaged.
+      - name: passenger_count
+        description: Driver-entered number of passengers in the vehicle.
+      - name: trip_distance
+        description: Trip distance reported by the taximeter in miles.
+      - name: fare_amount
+        description: Time-and-distance fare calculated by the meter.
+      - name: extra
+        description: Miscellaneous extras and surcharges assessed on the trip.
+      - name: mta_tax
+        description: MTA tax assessed based on the metered rate in use.
+      - name: tip_amount
+        description: Automatically populated credit-card tip amount.
+      - name: tolls_amount
+        description: Total tolls paid during the trip.
+      - name: ehail_fee
+        description: Electronic-hail fee reported by the source when applicable.
+      - name: improvement_surcharge
+        description: Improvement surcharge assessed at flag drop.
+      - name: total_amount
+        description: Total amount charged to passengers excluding cash tips.
+      - name: payment_type_id
+        description: Code describing how the passenger paid for the trip.
+      - name: trip_type_id
+        description: Code indicating whether the trip was street-hail or dispatch based.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed where applicable.
+      - name: source_path
+        description: Full object path from which the raw record was read.
+        tests:
+          - not_null
+      - name: source_file
+        description: Source object filename.
+        tests:
+          - not_null
+      - name: source_year
+        description: Year selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+      - name: source_month
+        description: Month selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+
+  - name: stg_fhv_trips
+    description: >-
+      Cleaned, typed FHV trip records at one row per source dispatch record.
+      No filtering, deduplication, joins, or business aggregations are applied.
+    columns:
+      - name: dispatching_base_num
+        description: TLC base license number of the base that dispatched the trip.
+      - name: pickup_datetime
+        description: Date and time when the passenger entered the vehicle.
+      - name: dropoff_datetime
+        description: Date and time when the passenger exited the vehicle.
+      - name: pickup_location_id
+        description: TLC Taxi Zone identifier where the passenger was picked up.
+      - name: dropoff_location_id
+        description: TLC Taxi Zone identifier where the passenger was dropped off.
+      - name: sr_flag
+        description: Indicates whether the trip was part of a shared-ride chain.
+      - name: affiliated_base_number
+        description: Base number affiliated with the vehicle for the trip.
+      - name: source_path
+        description: Full object path from which the raw record was read.
+        tests:
+          - not_null
+      - name: source_file
+        description: Source object filename.
+        tests:
+          - not_null
+      - name: source_year
+        description: Year selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+      - name: source_month
+        description: Month selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+
+  - name: stg_fhvhv_trips
+    description: >-
+      Cleaned, typed High Volume FHV trip records at one row per source trip.
+      No filtering, deduplication, joins, or business aggregations are applied.
+    columns:
+      - name: hvfhs_license_num
+        description: License number of the High Volume For-Hire Service provider.
+      - name: dispatching_base_num
+        description: TLC base license number of the base that dispatched the trip.
+      - name: originating_base_num
+        description: Base number that received the original passenger request.
+      - name: request_datetime
+        description: Date and time when the passenger requested the ride.
+      - name: on_scene_datetime
+        description: Date and time when the driver arrived at the pickup location.
+      - name: pickup_datetime
+        description: Date and time when the passenger entered the vehicle.
+      - name: dropoff_datetime
+        description: Date and time when the passenger exited the vehicle.
+      - name: pickup_location_id
+        description: TLC Taxi Zone identifier where the passenger was picked up.
+      - name: dropoff_location_id
+        description: TLC Taxi Zone identifier where the passenger was dropped off.
+      - name: trip_miles
+        description: Total passenger trip distance in miles.
+      - name: trip_time_seconds
+        description: Total passenger trip duration in seconds.
+      - name: base_passenger_fare
+        description: Base passenger fare before taxes, tolls, tips, and surcharges.
+      - name: tolls
+        description: Total tolls paid during the trip.
+      - name: bcf
+        description: Amount collected for the Black Car Fund.
+      - name: sales_tax
+        description: Sales tax collected for the trip.
+      - name: congestion_surcharge
+        description: NYS congestion surcharge collected for the trip.
+      - name: airport_fee
+        description: Airport pickup fee assessed where applicable.
+      - name: tips
+        description: Passenger tip amount reported by the provider.
+      - name: driver_pay
+        description: Total driver pay excluding cash tips.
+      - name: shared_request_flag
+        description: Indicates whether the passenger requested a shared ride.
+      - name: shared_match_flag
+        description: Indicates whether the passenger was matched for a shared ride.
+      - name: access_a_ride_flag
+        description: Indicates whether the trip was administered on behalf of Access-A-Ride.
+      - name: wav_request_flag
+        description: Indicates whether a wheelchair-accessible vehicle was requested.
+      - name: wav_match_flag
+        description: Indicates whether a wheelchair-accessible vehicle was provided.
+      - name: cbd_congestion_fee
+        description: Congestion Relief Zone fee assessed where applicable.
+      - name: source_path
+        description: Full object path from which the raw record was read.
+        tests:
+          - not_null
+      - name: source_file
+        description: Source object filename.
+        tests:
+          - not_null
+      - name: source_year
+        description: Year selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+      - name: source_month
+        description: Month selected by the ingestion and raw-model run.
+        tests:
+          - not_null
+
+  - name: stg_locations
+    description: Cleaned TLC Taxi Zone lookup at one row per location identifier.
+    columns:
+      - name: location_id
+        description: Unique TLC Taxi Zone identifier.
+        tests:
+          - not_null
+          - unique
+      - name: borough
+        description: New York City borough associated with the taxi zone.
+      - name: zone
+        description: TLC Taxi Zone name.
+      - name: service_zone
+        description: TLC service-zone grouping for the taxi zone.
+      - name: source_path
+        description: Full object path from which the raw record was read.
+        tests:
+          - not_null
+      - name: source_file
+        description: Source object filename.
+        tests:
+          - not_null
