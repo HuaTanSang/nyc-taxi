@@ -1,9 +1,7 @@
 {{
     config(
-        materialized='incremental',
-        incremental_strategy='insert_overwrite',
-        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type', 'pickup_location_id'],
-        schema='serving',
+        materialized='incremental',        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type', 'pickup_location_id'],
+        schema='marts',
         alias='mart_zone_daily',
         engine='MergeTree()',
         order_by=[

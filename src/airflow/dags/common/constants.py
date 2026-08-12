@@ -18,3 +18,42 @@ DEFAULT_DAG_PARAMS = {
     "month": Param(default=1, type="integer", minimum=1, maximum=12),
     "force_reload": Param(default=False, type="boolean"),
 }
+
+MONTHLY_PIPELINE_PARAMS = {
+    "year": Param(
+        default=2025,
+        type="integer",
+        enum=[2025, 2026],
+    ),
+    "month": Param(
+        default=1,
+        type="integer",
+        minimum=1,
+        maximum=12,
+    ),
+    "force_reload": Param(
+        default=False,
+        type="boolean",
+    ),
+}
+
+SUPPORTED_PIPELINE_YEARS = frozenset({2025, 2026})
+
+TAXI_PIPELINES = (
+    {
+        "taxi_type": "yellow",
+        "dag_id": "yellow_taxi_pipeline",
+    },
+    {
+        "taxi_type": "green",
+        "dag_id": "green_taxi_pipeline",
+    },
+    {
+        "taxi_type": "fhv",
+        "dag_id": "fhv_taxi_pipeline",
+    },
+    {
+        "taxi_type": "fhvhv",
+        "dag_id": "fhvhv_taxi_pipeline",
+    },
+)

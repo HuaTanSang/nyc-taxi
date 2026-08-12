@@ -1,8 +1,8 @@
 services:  
   minio:
     build:
-    context: .
-    dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile
     image: nyc-taxi-minio:latest
     container_name: minio
     ports:

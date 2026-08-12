@@ -20,13 +20,14 @@ services:
   airflow-init:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     image: nyc-taxi-airflow:latest
     container_name: airflow-init
     env_file:
       - .env
     environment: &airflow-env
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DAG_RUN_CONF_OVERRIDES_PARAMS: "true"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
@@ -46,6 +47,7 @@ services:
       - ./plugins:/opt/airflow/plugins
       - ./config:/opt/airflow/config
       - ./utils:/opt/airflow/utils
+      - ../dbt:/opt/airflow/dags/dbt
     command: version
     depends_on:
       postgres:
@@ -57,7 +59,7 @@ services:
   airflow-apiserver:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     image: nyc-taxi-airflow:latest
     container_name: airflow-apiserver
     env_file:

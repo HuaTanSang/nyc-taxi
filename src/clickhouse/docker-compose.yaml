@@ -2,7 +2,7 @@ services:
   clickhouse:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     image: nyc-taxi-clickhouse:latest
     container_name: clickhouse
     ports:
