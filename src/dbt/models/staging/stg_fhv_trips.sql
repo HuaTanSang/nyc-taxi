@@ -24,4 +24,8 @@ select
     nullIf(trim(toString(source_file)), '') as source_file,
     toUInt16OrNull(toString(source_year)) as source_year,
     toUInt8OrNull(toString(source_month)) as source_month
+    source_file, 
+    source_etag, 
+    source_file_id, 
+    row_number
 from source

@@ -1,15 +1,18 @@
 {{
     config(
         materialized='incremental',
-        unique_key='trip_sk',
-        schema='core',
-        alias='fct_yellow_taxi',
-        engine='MergeTree()',
-        order_by=['source_year', 'source_month', 'trip_sk'],
+        incremental_strategy='insert_overwrite',
         partition_by=['source_year', 'source_month'],
-        tags=['core', 'fact', 'yellow_taxi']
+        engine='MergeTree()',
+        order_by=[
+            'source_year',
+            'source_month',
+            'source_file_id',
+            'row_number'
+        ]
     )
 }}
+
 
 with source as (
     select *
@@ -19,46 +22,9 @@ with source as (
         and source_month = toUInt8({{ var('month') | int }})
 ),
 
-fingerprinted as (
-    select
-        *,
-        {{ record_fingerprint([
-            'vendor_id',
-            'pickup_datetime',
-            'dropoff_datetime',
-            'passenger_count',
-            'trip_distance',
-            'rate_code_id',
-            'store_and_fwd_flag',
-            'pickup_location_id',
-            'dropoff_location_id',
-            'payment_type_id',
-            'fare_amount',
-            'extra',
-            'mta_tax',
-            'tip_amount',
-            'tolls_amount',
-            'improvement_surcharge',
-            'congestion_surcharge',
-            'cbd_congestion_fee',
-            'airport_fee',
-            'total_amount'
-        ]) }} as record_fingerprint
-    from source
-),
-
-numbered as (
-    select
-        *,
-        row_number() over (
-            partition by source_path
-            order by record_fingerprint
-        ) as source_row_number
-    from fingerprinted
-)
 
 select
-    {{ stable_trip_key('yellow', 'source_path', 'source_row_number') }} as trip_sk,
+    {{ stable_trip_key('yellow', 'source_path', 'row_number') }} as trip_sk,
 
     toInt16OrNull(toString(vendor_id)) as vendor_id,
     toInt16OrNull(toString(rate_code_id)) as rate_code_id,
@@ -90,4 +56,4 @@ select
     source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
     toUInt8(assumeNotNull(source_month)) as source_month
-from numbered
+from source

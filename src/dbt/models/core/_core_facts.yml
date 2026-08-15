@@ -105,7 +105,7 @@ models:
       - name: source_file_id
         description: Full source object path used as a stable lineage identifier.
         data_tests: [not_null]
-      - name: source_row_number
+      - name: row_number
         description: Row ordinal within source_file_id ordered by a full-record fingerprint.
         data_tests: [not_null]
       - name: source_year
@@ -232,7 +232,7 @@ models:
       - name: source_file_id
         description: Full source object path used as a stable lineage identifier.
         data_tests: [not_null]
-      - name: source_row_number
+      - name: row_number
         description: Row ordinal within source_file_id ordered by a full-record fingerprint.
         data_tests: [not_null]
       - name: source_year
@@ -315,7 +315,7 @@ models:
       - name: source_file_id
         description: Full source object path used as a stable lineage identifier.
         data_tests: [not_null]
-      - name: source_row_number
+      - name: row_number
         description: Row ordinal within source_file_id ordered by a full-record fingerprint.
         data_tests: [not_null]
       - name: source_year
@@ -465,7 +465,7 @@ models:
       - name: source_file_id
         description: Full source object path used as a stable lineage identifier.
         data_tests: [not_null]
-      - name: source_row_number
+      - name: row_number
         description: Row ordinal within source_file_id ordered by a full-record fingerprint.
         data_tests: [not_null]
       - name: source_year

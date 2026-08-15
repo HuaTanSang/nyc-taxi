@@ -1,15 +1,18 @@
 {{
     config(
         materialized='incremental',
-        unique_key='trip_sk',
-        schema='core',
-        alias='fct_fhvhv_taxi',
-        engine='MergeTree()',
-        order_by=['source_year', 'source_month', 'trip_sk'],
+        incremental_strategy='insert_overwrite',
         partition_by=['source_year', 'source_month'],
-        tags=['core', 'fact', 'fhvhv_taxi']
+        engine='MergeTree()',
+        order_by=[
+            'source_year',
+            'source_month',
+            'source_file_id',
+            'row_number'
+        ]
     )
 }}
+
 
 with source as (
     select *
@@ -17,54 +20,10 @@ with source as (
     where source_path is not null
         and source_year = toUInt16({{ var('year') | int }})
         and source_month = toUInt8({{ var('month') | int }})
-),
-
-fingerprinted as (
-    select
-        *,
-        {{ record_fingerprint([
-            'hvfhs_license_num',
-            'dispatching_base_num',
-            'originating_base_num',
-            'request_datetime',
-            'on_scene_datetime',
-            'pickup_datetime',
-            'dropoff_datetime',
-            'pickup_location_id',
-            'dropoff_location_id',
-            'trip_miles',
-            'trip_time_seconds',
-            'base_passenger_fare',
-            'tolls',
-            'bcf',
-            'sales_tax',
-            'congestion_surcharge',
-            'airport_fee',
-            'tips',
-            'driver_pay',
-            'shared_request_flag',
-            'shared_match_flag',
-            'access_a_ride_flag',
-            'wav_request_flag',
-            'wav_match_flag',
-            'cbd_congestion_fee'
-        ]) }} as record_fingerprint
-    from source
-),
-
-numbered as (
-    select
-        *,
-        row_number() over (
-            partition by source_path
-            order by record_fingerprint
-        ) as source_row_number
-    from fingerprinted
 )
 
 select
-    {{ stable_trip_key('fhvhv', 'source_path', 'source_row_number') }} as trip_sk,
-
+    {{ stable_trip_key('yellow', 'source_path', 'row_number') }} as trip_sk,
     hvfhs_license_num as hvfhs_license_number,
     originating_base_num as original_base_number,
     dispatching_base_num as dispatching_base_number,
@@ -107,4 +66,4 @@ select
     source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
     toUInt8(assumeNotNull(source_month)) as source_month
-from numbered
+from source

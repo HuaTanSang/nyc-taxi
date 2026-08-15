@@ -1,6 +1,7 @@
 {{
     config(
-        materialized='incremental',        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type', 'pickup_location_id'],
+        materialized='incremental',        
+        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type', 'pickup_location_id'],
         schema='marts',
         alias='mart_zone_daily',
         engine='MergeTree()',
@@ -9,7 +10,7 @@
             'source_month',
             'service_type',
             'ifNull(pickup_date_id, 0)',
-            'ifNull(pickup_location_id, 0)'
+            'ifNull(pickup_location_id, 0)' 
         ],
         partition_by=['source_year', 'source_month'],
         tags=['serving', 'mart', 'daily', 'zone']
