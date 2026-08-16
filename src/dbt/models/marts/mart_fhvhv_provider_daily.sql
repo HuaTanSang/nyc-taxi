@@ -1,7 +1,7 @@
 {{
     config(
         materialized='incremental',
-        unique_key=['source_year', 'source_month', 'pickup_date_id', 'hvfhs_license_number'],
+        incremental_strategy='insert_overwrite',
         schema='marts',
         alias='mart_fhvhv_provider_daily',
         engine='MergeTree()',

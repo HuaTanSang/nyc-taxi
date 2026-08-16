@@ -18,6 +18,5 @@ select
     nullIf(trim(toString(Zone)), '') as zone,
     nullIf(trim(toString(service_zone)), '') as service_zone,
     nullIf(trim(toString(source_path)), '') as source_path,
-    nullIf(trim(toString(source_file)), '') as source_file,
-    row_number
+    nullIf(trim(toString(source_file)), '') as source_file
 from source

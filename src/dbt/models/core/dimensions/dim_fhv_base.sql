@@ -12,7 +12,7 @@
 }}
 
 with base_numbers as (
-    select dispatching_base_num as base_number
+    select dispatching_base_number as base_number
     from {{ ref('stg_fhv_trips') }}
 
     union all
@@ -22,12 +22,12 @@ with base_numbers as (
 
     union all
 
-    select dispatching_base_num
+    select dispatching_base_number
     from {{ ref('stg_fhvhv_trips') }}
 
     union all
 
-    select originating_base_num
+    select original_base_number
     from {{ ref('stg_fhvhv_trips') }}
 ),
 

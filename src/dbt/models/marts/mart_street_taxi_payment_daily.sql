@@ -1,7 +1,7 @@
 {{
     config(
         materialized='incremental',
-        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type', 'payment_type_id'],
+        incremental_strategy='insert_overwrite',
         schema='marts',
         alias='mart_street_taxi_payment_daily',
         engine='MergeTree()',

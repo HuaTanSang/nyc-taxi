@@ -34,7 +34,7 @@ DBT_RUNTIME_VARS = {
 COMMON_DBT_OPERATOR_ARGS = {
     "vars": DBT_RUNTIME_VARS,
     "cancel_query_on_kill": True,
-    "pool": "default_pool",
+    "pool": "clickhouse_heavy",
     "pool_slots": 1,
 }
 
@@ -125,6 +125,7 @@ def nyc_taxi_pipeline():
         render_config=RenderConfig(
             select=[
                 "path:models/core",
+                "path:models/intermediate",
             ],
             test_behavior=TestBehavior.AFTER_ALL,
         ),

@@ -2,14 +2,15 @@
     config(
         materialized='incremental',
         incremental_strategy='insert_overwrite',
-        partition_by=['source_year', 'source_month'],
+        schema='core',
+        alias='fct_yellow_taxi',
         engine='MergeTree()',
-        order_by=[
-            'source_year',
-            'source_month',
-            'source_file_id',
-            'row_number'
-        ]
+        partition_by=['source_year', 'source_month'],
+        order_by=['vendor_id', 'pickup_datetime', 'dropoff_datetime'],
+        settings={
+            'allow_nullable_key': 1
+        },
+        tags=['core', 'fact', 'yellow_taxi']
     )
 }}
 
@@ -20,12 +21,10 @@ with source as (
     where source_path is not null
         and source_year = toUInt16({{ var('year') | int }})
         and source_month = toUInt8({{ var('month') | int }})
-),
+)
 
 
 select
-    {{ stable_trip_key('yellow', 'source_path', 'row_number') }} as trip_sk,
-
     toInt16OrNull(toString(vendor_id)) as vendor_id,
     toInt16OrNull(toString(rate_code_id)) as rate_code_id,
     toInt16OrNull(toString(payment_type_id)) as payment_type_id,
@@ -51,9 +50,8 @@ select
     toDecimal64OrNull(toString(total_amount), 2) as total_amount,
 
     dateDiff('second', pickup_datetime, dropoff_datetime) as trip_duration_seconds,
-
-    assumeNotNull(source_path) as source_file_id,
-    source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
-    toUInt8(assumeNotNull(source_month)) as source_month
+    toUInt8(assumeNotNull(source_month)) as source_month,
+    source_path, 
+    source_file
 from source

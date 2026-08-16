@@ -2,14 +2,15 @@
     config(
         materialized='incremental',
         incremental_strategy='insert_overwrite',
-        partition_by=['source_year', 'source_month'],
+        schema='core',
+        alias='fct_fhvhv_taxi',
         engine='MergeTree()',
-        order_by=[
-            'source_year',
-            'source_month',
-            'source_file_id',
-            'row_number'
-        ]
+        partition_by=['source_year', 'source_month'],
+        order_by=['hvfhs_license_number', 'pickup_datetime', 'dropoff_datetime'],
+        settings={
+            'allow_nullable_key': 1
+        },
+        tags=['core', 'fact', 'fhvhv_taxi']
     )
 }}
 
@@ -23,10 +24,9 @@ with source as (
 )
 
 select
-    {{ stable_trip_key('yellow', 'source_path', 'row_number') }} as trip_sk,
-    hvfhs_license_num as hvfhs_license_number,
-    originating_base_num as original_base_number,
-    dispatching_base_num as dispatching_base_number,
+    hvfhs_license_number,
+    original_base_number,
+    dispatching_base_number,
 
     request_datetime,
     on_scene_datetime,
@@ -61,9 +61,9 @@ select
     dateDiff('second', request_datetime, pickup_datetime) as request_to_pickup_seconds,
     dateDiff('second', request_datetime, on_scene_datetime) as request_to_on_scene_seconds,
     dateDiff('second', on_scene_datetime, pickup_datetime) as on_scene_to_pickup_seconds,
-
-    assumeNotNull(source_path) as source_file_id,
-    source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
-    toUInt8(assumeNotNull(source_month)) as source_month
+    toUInt8(assumeNotNull(source_month)) as source_month,
+    source_path, 
+    source_file
+
 from source

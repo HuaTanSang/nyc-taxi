@@ -2,17 +2,17 @@
     config(
         materialized='incremental',
         incremental_strategy='insert_overwrite',
-        partition_by=['source_year', 'source_month'],
+        schema='core',
+        alias='fct_fhv_taxi',
         engine='MergeTree()',
-        order_by=[
-            'source_year',
-            'source_month',
-            'source_file_id',
-            'row_number'
-        ]
+        partition_by=['source_year', 'source_month'],
+        order_by=['dispatching_base_number', 'pickup_datetime', 'dropoff_datetime'],
+        settings={
+            'allow_nullable_key': 1
+        },
+        tags=['core', 'fact', 'fhv_taxi']
     )
 }}
-
 
 with source as (
     select *
@@ -23,8 +23,7 @@ with source as (
 )
 
 select
-    {{ stable_trip_key('yellow', 'source_path', 'row_number') }} as trip_sk,
-    dispatching_base_num as dispatching_base_number,
+    dispatching_base_number,
     affiliated_base_number,
 
     pickup_datetime,
@@ -43,9 +42,8 @@ select
     ) as shared_ride_flag,
 
     dateDiff('second', pickup_datetime, dropoff_datetime) as trip_duration_seconds,
-
-    assumeNotNull(source_path) as source_file_id,
-    source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
-    toUInt8(assumeNotNull(source_month)) as source_month
+    toUInt8(assumeNotNull(source_month)) as source_month,
+    source_path, 
+    source_file
 from source
