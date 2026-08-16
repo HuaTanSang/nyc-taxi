@@ -16,6 +16,14 @@ nyc_taxi:
       secure: false
       verify: false
 
-      threads: 4
+      threads: 1
       connect_timeout: 10
       send_receive_timeout: 600
+
+      custom_settings:
+        max_threads: 2
+        max_insert_threads: 1
+        max_memory_usage: 2684354560
+        max_bytes_before_external_sort: 536870912
+        max_bytes_before_external_group_by: 536870912
+        join_algorithm: auto

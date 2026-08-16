@@ -1,0 +1,24 @@
+<clickhouse>
+    <profiles>
+        <default>
+            <!-- CPU/concurrency -->
+            <max_threads>2</max_threads>
+            <max_insert_threads>1</max_insert_threads>
+
+            <!-- 2.5 GiB/query, 3.5 GiB/user -->
+            <max_memory_usage>2684354560</max_memory_usage>
+            <max_memory_usage_for_user>3758096384</max_memory_usage_for_user>
+
+            <!-- Spill từ 512 MiB -->
+            <max_bytes_before_external_sort>536870912</max_bytes_before_external_sort>
+            <max_bytes_before_external_group_by>536870912</max_bytes_before_external_group_by>
+
+            <!-- Join có thể đổi thuật toán khi thiếu RAM -->
+            <join_algorithm>auto</join_algorithm>
+
+            <!-- Giới hạn dung lượng spill -->
+            <max_temporary_data_on_disk_size_for_query>21474836480</max_temporary_data_on_disk_size_for_query>
+            <max_temporary_data_on_disk_size_for_user>32212254720</max_temporary_data_on_disk_size_for_user>
+        </default>
+    </profiles>
+</clickhouse>

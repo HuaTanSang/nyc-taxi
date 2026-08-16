@@ -14,6 +14,9 @@ services:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-default}
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./config.d/10-memory.xml:/etc/clickhouse-server/config.d/10-memory.xml:ro
+      - ./users.d/10-memory.xml:/etc/clickhouse-server/users.d/10-memory.xml:ro
+    mem_limit: 5g
     env_file:
       - .env
     restart: unless-stopped

@@ -13,9 +13,9 @@ with source as (
 )
 
 select
-    nullIf(trim(toString(hvfhs_license_num)), '') as hvfhs_license_num,
-    nullIf(trim(toString(dispatching_base_num)), '') as dispatching_base_num,
-    nullIf(trim(toString(originating_base_num)), '') as originating_base_num,
+    nullIf(trim(toString(hvfhs_license_num)), '') as hvfhs_license_number,
+    nullIf(trim(toString(dispatching_base_num)), '') as dispatching_base_number,
+    nullIf(trim(toString(originating_base_num)), '') as original_base_number,
     toDateTime64OrNull(toString(request_datetime), 3) as request_datetime,
     toDateTime64OrNull(toString(on_scene_datetime), 3) as on_scene_datetime,
     toDateTime64OrNull(toString(pickup_datetime), 3) as pickup_datetime,
@@ -41,5 +41,9 @@ select
     nullIf(trim(toString(source_path)), '') as source_path,
     nullIf(trim(toString(source_file)), '') as source_file,
     toUInt16OrNull(toString(source_year)) as source_year,
-    toUInt8OrNull(toString(source_month)) as source_month
+    toUInt8OrNull(toString(source_month)) as source_month,
+    source_etag, 
+    source_file_id,
+
+
 from source

@@ -17,5 +17,7 @@ select
     _path as source_path,
     _file as source_file,
     toUInt16({{ year }}) as source_year,
-    toUInt8({{ month }}) as source_month
+    toUInt8({{ month }}) as source_month,
+    _etag as source_etag,
+    lower(hex(SHA256(concatWithSeparator('||', _path, _etag)))) as source_file_id
 from {{ s3_source(object_key) }}     

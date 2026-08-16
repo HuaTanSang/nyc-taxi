@@ -9,7 +9,6 @@
 
 select
     'yellow' as service_type,
-    trip_sk,
     source_year,
     source_month,
     pickup_date_id,
@@ -28,7 +27,6 @@ union all
 
 select
     'green' as service_type,
-    trip_sk,
     source_year,
     source_month,
     pickup_date_id,
@@ -47,7 +45,6 @@ union all
 
 select
     'fhv' as service_type,
-    trip_sk,
     source_year,
     source_month,
     pickup_date_id,
@@ -66,7 +63,6 @@ union all
 
 select
     'fhvhv' as service_type,
-    trip_sk,
     source_year,
     source_month,
     pickup_date_id,

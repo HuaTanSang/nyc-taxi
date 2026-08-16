@@ -43,5 +43,5 @@ models:
     core:
       +schema: core
 
-    serving:
-      +schema: serving
+    marts:
+      +schema: marts

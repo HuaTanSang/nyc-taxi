@@ -14,7 +14,7 @@ from cosmos import (
     ProjectConfig,
     RenderConfig,
 )
-from cosmos.constants import InvocationMode
+from cosmos.constants import InvocationMode, TestBehavior
 from cosmos.profiles import ClickhouseUserPasswordProfileMapping
 from nyc_taxi_pipeline.task.build_ingestion_plan import build_ingestion_plan
 
@@ -24,6 +24,20 @@ DBT_ROOT_PATH = Path(
         "/opt/airflow/dags/dbt",
     )
 )
+DBT_RUNTIME_VARS = {
+    "year": "{{ params.year }}",
+    "month": "{{ params.month }}",
+    "force_reload": "{{ params.force_reload }}",
+    "airflow_run_id": "{{ run_id }}",
+}
+
+COMMON_DBT_OPERATOR_ARGS = {
+    "vars": DBT_RUNTIME_VARS,
+    "cancel_query_on_kill": True,
+    "pool": "clickhouse_heavy",
+    "pool_slots": 1,
+}
+
 # DBT_PROJECT_NAME = os.getenv("DBT_PROJECT_NAME", "nyc_taxi",)
 # DBT_PROJECT_PATH = DBT_ROOT_PATH / DBT_PROJECT_NAME
 
@@ -34,6 +48,7 @@ DBT_ROOT_PATH = Path(
     start_date=pendulum.datetime(2025, 1, 1, tz="UTC"),
     catchup=False,
     max_active_runs=1,
+    max_active_tasks=2,
     params=MONTHLY_PIPELINE_PARAMS,
     render_template_as_native_obj=True,
     tags=["nyc-taxi", "monthly", "orchestration"],
@@ -64,16 +79,18 @@ def nyc_taxi_pipeline():
             conn_id="clickhouse_default",
             profile_args={
                 "schema": "default",
+                "threads": 1,
             },
         ),
     )
 
     execution_config = ExecutionConfig(
-        invocation_mode=InvocationMode.SUBPROCESS,
+        invocation_mode=InvocationMode.DBT_RUNNER,
     )
 
     load_to_raw_layer = DbtTaskGroup(
         group_id="load_to_raw_layer",
+        operator_args=COMMON_DBT_OPERATOR_ARGS,
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
@@ -81,11 +98,13 @@ def nyc_taxi_pipeline():
             select=[
                 "path:models/raw",
             ],
+            test_behavior=TestBehavior.AFTER_ALL,
         ),
     )
 
     load_to_staging_layer = DbtTaskGroup(
         group_id="load_to_staging_layer",
+        operator_args=COMMON_DBT_OPERATOR_ARGS,
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
@@ -93,23 +112,28 @@ def nyc_taxi_pipeline():
             select=[
                 "path:models/staging",
             ],
+            test_behavior=TestBehavior.AFTER_ALL,
         ),
     )
 
     load_to_core_layer = DbtTaskGroup(
         group_id="load_to_core_layer",
+        operator_args=COMMON_DBT_OPERATOR_ARGS,
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=RenderConfig(
             select=[
                 "path:models/core",
+                "path:models/intermediate",
             ],
+            test_behavior=TestBehavior.AFTER_ALL,
         ),
     )
 
     load_to_marts_layer = DbtTaskGroup(
         group_id="load_to_marts_layer",
+        operator_args=COMMON_DBT_OPERATOR_ARGS,
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
@@ -117,6 +141,7 @@ def nyc_taxi_pipeline():
             select=[
                 "path:models/marts",
             ],
+            test_behavior=TestBehavior.AFTER_ALL,
         ),
     )
 

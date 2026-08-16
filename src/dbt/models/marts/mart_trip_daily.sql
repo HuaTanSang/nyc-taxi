@@ -1,7 +1,7 @@
 {{
     config(
         materialized='incremental',
-        unique_key=['source_year', 'source_month', 'pickup_date_id', 'service_type'],
+        incremental_strategy='insert_overwrite',
         schema='marts',
         alias='mart_trip_daily',
         engine='MergeTree()',
@@ -19,11 +19,8 @@
 with trips as (
     select *
     from {{ ref('int_trips_unioned') }}
-
-    {% if is_incremental() %}
     where source_year = toUInt16({{ var('year') | int }})
-        and source_month = toUInt8({{ var('month') | int }})
-    {% endif %}
+    and source_month = toUInt8({{ var('month') | int }})
 )
 
 select

@@ -6,9 +6,6 @@ models:
       Atomic Yellow Taxi fact. One row represents one source trip record from
       one monthly TLC object.
     columns:
-      - name: trip_sk
-        description: Deterministic surrogate key for the source trip record.
-        data_tests: [not_null, unique]
       - name: vendor_id
         description: TLC technology-provider code.
         data_tests:
@@ -102,12 +99,6 @@ models:
         description: Total passenger charge excluding cash tips.
       - name: trip_duration_seconds
         description: Drop-off minus pickup time in seconds.
-      - name: source_file_id
-        description: Full source object path used as a stable lineage identifier.
-        data_tests: [not_null]
-      - name: source_row_number
-        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
-        data_tests: [not_null]
       - name: source_year
         description: Year of the monthly source object and physical partition.
         data_tests: [not_null]
@@ -120,9 +111,6 @@ models:
       Atomic Green Taxi fact. One row represents one source trip record from
       one monthly TLC object.
     columns:
-      - name: trip_sk
-        description: Deterministic surrogate key for the source trip record.
-        data_tests: [not_null, unique]
       - name: vendor_id
         description: TLC technology-provider code.
         data_tests:
@@ -229,12 +217,6 @@ models:
         description: Total passenger charge excluding cash tips.
       - name: trip_duration_seconds
         description: Drop-off minus pickup time in seconds.
-      - name: source_file_id
-        description: Full source object path used as a stable lineage identifier.
-        data_tests: [not_null]
-      - name: source_row_number
-        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
-        data_tests: [not_null]
       - name: source_year
         description: Year of the monthly source object and physical partition.
         data_tests: [not_null]
@@ -247,9 +229,6 @@ models:
       Atomic FHV dispatch fact. One row represents one source dispatch record;
       the TLC source does not provide distance or fare measures.
     columns:
-      - name: trip_sk
-        description: Deterministic surrogate key for the source dispatch record.
-        data_tests: [not_null, unique]
       - name: dispatching_base_number
         description: TLC base that dispatched the trip.
         data_tests:
@@ -312,12 +291,6 @@ models:
         description: Nullable normalization of the TLC SR_Flag field.
       - name: trip_duration_seconds
         description: Drop-off minus pickup time in seconds.
-      - name: source_file_id
-        description: Full source object path used as a stable lineage identifier.
-        data_tests: [not_null]
-      - name: source_row_number
-        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
-        data_tests: [not_null]
       - name: source_year
         description: Year of the monthly source object and physical partition.
         data_tests: [not_null]
@@ -330,9 +303,6 @@ models:
       Atomic High Volume FHV trip fact. One row represents one TLC FHVHV trip
       record from one monthly source object.
     columns:
-      - name: trip_sk
-        description: Deterministic surrogate key for the source trip record.
-        data_tests: [not_null, unique]
       - name: hvfhs_license_number
         description: TLC High Volume FHV provider license.
         data_tests:
@@ -462,12 +432,6 @@ models:
         description: Driver on-scene time minus request time in seconds.
       - name: on_scene_to_pickup_seconds
         description: Pickup time minus driver on-scene time in seconds.
-      - name: source_file_id
-        description: Full source object path used as a stable lineage identifier.
-        data_tests: [not_null]
-      - name: source_row_number
-        description: Row ordinal within source_file_id ordered by a full-record fingerprint.
-        data_tests: [not_null]
       - name: source_year
         description: Year of the monthly source object and physical partition.
         data_tests: [not_null]

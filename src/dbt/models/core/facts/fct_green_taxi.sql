@@ -1,15 +1,20 @@
 {{
     config(
         materialized='incremental',
-        unique_key='trip_sk',
+        incremental_strategy='insert_overwrite',
         schema='core',
         alias='fct_green_taxi',
         engine='MergeTree()',
-        order_by=['source_year', 'source_month', 'trip_sk'],
         partition_by=['source_year', 'source_month'],
+        order_by=['vendor_id', 'pickup_datetime', 'dropoff_datetime'],
+        settings={
+            'allow_nullable_key': 1
+        },
         tags=['core', 'fact', 'green_taxi']
     )
 }}
+
+
 
 with source as (
     select *
@@ -17,50 +22,10 @@ with source as (
     where source_path is not null
         and source_year = toUInt16({{ var('year') | int }})
         and source_month = toUInt8({{ var('month') | int }})
-),
-
-fingerprinted as (
-    select
-        *,
-        {{ record_fingerprint([
-            'vendor_id',
-            'pickup_datetime',
-            'dropoff_datetime',
-            'store_and_fwd_flag',
-            'rate_code_id',
-            'pickup_location_id',
-            'dropoff_location_id',
-            'passenger_count',
-            'trip_distance',
-            'fare_amount',
-            'extra',
-            'mta_tax',
-            'tip_amount',
-            'tolls_amount',
-            'ehail_fee',
-            'improvement_surcharge',
-            'total_amount',
-            'payment_type_id',
-            'trip_type_id',
-            'congestion_surcharge',
-            'cbd_congestion_fee'
-        ]) }} as record_fingerprint
-    from source
-),
-
-numbered as (
-    select
-        *,
-        row_number() over (
-            partition by source_path
-            order by record_fingerprint
-        ) as source_row_number
-    from fingerprinted
 )
 
-select
-    {{ stable_trip_key('green', 'source_path', 'source_row_number') }} as trip_sk,
 
+select
     toInt16OrNull(toString(vendor_id)) as vendor_id,
     toInt16OrNull(toString(rate_code_id)) as rate_code_id,
     toInt16OrNull(toString(payment_type_id)) as payment_type_id,
@@ -86,11 +51,9 @@ select
     toDecimal64OrNull(toString(cbd_congestion_fee), 2) as cbd_congestion_fee,
     cast(null as Nullable(Decimal64(2))) as airport_fee,
     toDecimal64OrNull(toString(total_amount), 2) as total_amount,
-
     dateDiff('second', pickup_datetime, dropoff_datetime) as trip_duration_seconds,
-
-    assumeNotNull(source_path) as source_file_id,
-    source_row_number,
     toUInt16(assumeNotNull(source_year)) as source_year,
-    toUInt8(assumeNotNull(source_month)) as source_month
-from numbered
+    toUInt8(assumeNotNull(source_month)) as source_month,
+    source_path, 
+    source_file
+from source

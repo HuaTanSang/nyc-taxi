@@ -13,10 +13,6 @@ models:
           - accepted_values:
               arguments:
                 values: [yellow, green, fhv, fhvhv]
-      - name: trip_sk
-        description: Surrogate trip key from the originating core fact.
-        data_tests:
-          - not_null
       - name: source_year
         description: Year of the monthly source object.
         data_tests:
