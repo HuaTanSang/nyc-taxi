@@ -2,20 +2,20 @@ x-superset-common: &superset-common
   build:
     context: .
     dockerfile: Dockerfile
-  image: nyc-taxi-superset:${SUPERSET_VERSION}
+    args:
+      SUPERSET_VERSION: ${SUPERSET_VERSION:-6.0.0}
+  image: nyc-taxi-superset:${SUPERSET_VERSION:-6.0.0}  
   env_file:
     - .env
   environment:
     SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
-    SUPERSET_DATABASE_URI: >-
-      postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@superset-db:5432/${POSTGRES_DB}
     SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
   networks:
     - platform_net
 
 services:
   superset-db:
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: superset-db
     env_file:
       - .env
@@ -59,7 +59,7 @@ services:
           --lastname "$${ADMIN_LASTNAME}" \
           --email "$${ADMIN_EMAIL}" \
           --password "$${ADMIN_PASSWORD}" \
-        || echo "Admin account already exists."
+        || echo "Admin creation failed or the account already exists; inspect the logs above."
 
         superset init
     restart: "no"
@@ -73,7 +73,7 @@ services:
       superset-init:
         condition: service_completed_successfully
     ports:
-      - "${SUPERSET_PORT}:8088"
+      - "${SUPERSET_PORT:-8088}:8088"
     command:
       - /bin/sh
       - -c

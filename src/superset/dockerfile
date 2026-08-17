@@ -1,16 +1,14 @@
-FROM ghcr.io/astral-sh/uv:latest AS uv
+ARG SUPERSET_VERSION=6.0.0
 
-FROM apache/superset:6.0.0
+FROM apache/superset:${SUPERSET_VERSION}
 
 USER root
-
-COPY --from=uv /uv /uvx /bin/
 
 RUN uv pip install \
     --python /app/.venv/bin/python \
     --no-cache \
-    clickhouse-connect \
-    psycopg2-binary
+    "clickhouse-connect>=0.13.0,<0.14.0" \
+    "psycopg2-binary>=2.9,<3"
 
 COPY --chown=superset:superset \
     superset_config.py \
