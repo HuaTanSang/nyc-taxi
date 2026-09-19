@@ -16,9 +16,6 @@ x-superset-common: &superset-common
     SUPERSET_ADMIN_LASTNAME: ${SUPERSET_ADMIN_LASTNAME}
     SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
     SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
-  networks:
-    - platform_net
-
 services:
   superset-db:
     image: postgres:${SUPERSET_POSTGRES_VERSION:-16.9-alpine}
@@ -39,8 +36,6 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
-    networks:
-      - platform_net
 
   superset-init:
     <<: *superset-common
@@ -75,8 +70,9 @@ services:
     depends_on:
       superset-db:
         condition: service_healthy
-      superset-init:
-        condition: service_completed_successfully
+    networks:
+      - default
+      - platform_net
     ports:
       - "${SUPERSET_PORT:-8088}:8088"
     command:
@@ -108,6 +104,7 @@ volumes:
   superset_postgres_data:
 
 networks:
+  default:
   platform_net:
     external: true
     name: platform_net

@@ -14,15 +14,15 @@ Superset. Docker Compose projects are orchestrated through the root Makefile.
 ```bash
 make configure
 make bootstrap
-make up
-make doctor
 make smoke
 ```
 
 `make configure` creates an ignored root `.env` from `.env.example` and
 generates missing local-development secrets. Run it for the initial setup and
 again only when adding or rotating configuration; it never replaces an existing
-secret.
+secret. `make bootstrap` builds the images, starts the core services, runs the
+one-shot initialization tasks, starts the runtime services, and verifies their
+health. For later starts, use `make up` followed by `make doctor` as needed.
 
 Useful commands:
 
