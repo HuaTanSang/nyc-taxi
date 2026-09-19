@@ -1,0 +1,12 @@
+.env
+.git/
+.venv/
+logs/
+plugins/
+config/
+utils/
+__pycache__/
+*.py[codz]
+.pytest_cache/
+.ruff_cache/
+target/

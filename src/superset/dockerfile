@@ -4,11 +4,12 @@ FROM apache/superset:${SUPERSET_VERSION}
 
 USER root
 
+COPY superset-requirements.txt /tmp/superset-requirements.txt
+
 RUN uv pip install \
     --python /app/.venv/bin/python \
     --no-cache \
-    "clickhouse-connect>=0.13.0,<0.14.0" \
-    "psycopg2-binary>=2.9,<3"
+    --requirement /tmp/superset-requirements.txt
 
 COPY --chown=superset:superset \
     superset_config.py \

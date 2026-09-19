@@ -156,6 +156,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/
 
 # Spyder project settings
 .spyderproject
@@ -220,7 +221,7 @@ __marimo__/
 # logs
 src/airflow/logs
 src/dbt/logs
-src/dbt/dbt_packages/dbt_utils
+src/dbt/dbt_packages/
 
 # testing
 test.*

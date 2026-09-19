@@ -2515,19 +2515,19 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "apache-airflow", specifier = "==3.2.2" },
-    { name = "apache-airflow-providers-amazon", specifier = ">=9.33.0" },
-    { name = "astronomer-cosmos", specifier = ">=1.15.1" },
-    { name = "botocore", specifier = ">=1.43.62" },
-    { name = "dbt-clickhouse", specifier = ">=1.10.1" },
-    { name = "fastparquet", specifier = ">=2026.5.0" },
-    { name = "pandas", specifier = ">=3.0.5" },
-    { name = "pyarrow", specifier = ">=25.0.0" },
+    { name = "apache-airflow-providers-amazon", specifier = "==9.33.0" },
+    { name = "astronomer-cosmos", specifier = "==1.15.1" },
+    { name = "botocore", specifier = "==1.43.62" },
+    { name = "dbt-clickhouse", specifier = "==1.10.1" },
+    { name = "fastparquet", specifier = "==2026.5.0" },
+    { name = "pandas", specifier = "==3.0.5" },
+    { name = "pyarrow", specifier = "==25.0.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pre-commit", specifier = ">=4.6.1" },
-    { name = "ruff", specifier = ">=0.16.0" },
+    { name = "pre-commit", specifier = "==4.6.1" },
+    { name = "ruff", specifier = "==0.16.0" },
 ]
 
 [[package]]
