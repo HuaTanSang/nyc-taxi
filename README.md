@@ -70,6 +70,9 @@ states; `make smoke` verifies the service endpoints and runs `dbt parse`.
 Named volumes preserve MinIO objects, ClickHouse data, Airflow metadata and
 logs, and Superset metadata across `make down`. Rebuild an image after changing
 its Dockerfile or Python requirements with `make build`, then run `make up`.
+The standalone dbt container bind-mounts `src/dbt`, so it sees model and macro
+edits immediately. Airflow uses a dbt project and manifest baked into its image;
+after changing dbt code used by a DAG, rebuild and restart the Airflow services.
 
 To rotate an application secret, first run `make down`, replace its value in
 `.env` (or set it to `__GENERATE__`), and rerun `make configure`. Database and
