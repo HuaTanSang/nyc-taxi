@@ -21,6 +21,10 @@ x-airflow-env: &airflow-env
   MINIO_ENDPOINT: http://minio:9000
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  AIRFLOW_CONN_MINIO_S3: >-
+    {"conn_type":"aws","login":"${MINIO_ACCESS_KEY}","password":"${MINIO_SECRET_KEY}","extra":{"endpoint_url":"http://minio:9000","region_name":"us-east-1"}}
+  AIRFLOW_CONN_CLICKHOUSE_DEFAULT: >-
+    {"conn_type":"generic","host":"clickhouse","port":9000,"schema":"default","login":"${CLICKHOUSE_USER}","password":"${CLICKHOUSE_PASSWORD}","extra":{"clickhouse":true}}
 
 services:
   postgres:
@@ -68,7 +72,14 @@ services:
       - ./dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
       - ../dbt:/opt/airflow/dags/dbt
-    command: version
+    command:
+      - bash
+      - -c
+      - |
+        airflow pools set \
+          clickhouse_heavy \
+          1 \
+          "Serializes ClickHouse-heavy dbt tasks"
     depends_on:
       postgres:
         condition: service_healthy

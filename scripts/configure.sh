@@ -58,6 +58,11 @@ generate_if_missing() {
     fi
 }
 
+host_uid() {
+    id -u
+}
+
+generate_if_missing AIRFLOW_UID host_uid
 generate_if_missing MINIO_SECRET_KEY 'generate_hex 24'
 generate_if_missing CLICKHOUSE_PASSWORD 'generate_hex 24'
 generate_if_missing AIRFLOW_ADMIN_PASSWORD 'generate_hex 24'

@@ -20,9 +20,15 @@ make smoke
 `make configure` creates an ignored root `.env` from `.env.example` and
 generates missing local-development secrets. Run it for the initial setup and
 again only when adding or rotating configuration; it never replaces an existing
-secret. `make bootstrap` builds the images, starts the core services, runs the
-one-shot initialization tasks, starts the runtime services, and verifies their
-health. For later starts, use `make up` followed by `make doctor` as needed.
+secret. On Linux and WSL, it also records the current host user ID as
+`AIRFLOW_UID` so files written by Airflow have the expected ownership.
+`make bootstrap` builds the images, starts the core services, runs the one-shot
+initialization tasks, starts the runtime services, and verifies their health.
+For later starts, use `make up` followed by `make doctor` as needed.
+
+The `minio_s3` and `clickhouse_default` Airflow connections are supplied through
+container environment variables. Airflow resolves them when parsing or running
+DAGs, but does not store or display them in the metadata database UI.
 
 Useful commands:
 

@@ -149,7 +149,9 @@ doctor: require-env
 		check_container "$$service" "$$($(SUPERSET) ps -q "$$service")"; \
 	done; \
 	check_container dbt "$$($(DBT) ps -q dbt)"; \
-	echo "Docker network and runtime services are healthy."
+	$(AIRFLOW) exec -T airflow-scheduler python -c \
+		'from airflow.sdk import Connection; Connection.get("minio_s3"); Connection.get("clickhouse_default")'; \
+	echo "Docker network, runtime services, and Airflow connections are healthy."
 
 smoke: require-env
 	@$(ROOT)/scripts/smoke.sh
