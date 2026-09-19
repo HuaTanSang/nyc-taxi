@@ -1,6 +1,6 @@
-FROM ghcr.io/astral-sh/uv:latest AS uv
+FROM ghcr.io/astral-sh/uv:0.7.21 AS uv
 
-FROM python:3.14
+FROM python:3.12.13-slim-bookworm
 
 COPY --from=uv /uv /uvx /bin/
 
@@ -12,10 +12,12 @@ WORKDIR /usr/app/dbt
 
 COPY . /usr/app/dbt/
 
+COPY dbt-requirements.txt /tmp/dbt-requirements.txt
+
 RUN uv venv /opt/venv \
     && uv pip install --python /opt/venv/bin/python \
-        dbt-core \
-        dbt-clickhouse
+        --no-cache \
+        --requirement /tmp/dbt-requirements.txt
 
 ENV PATH="/opt/venv/bin:$PATH"
 ENV DBT_PROFILES_DIR=/usr/app/dbt
