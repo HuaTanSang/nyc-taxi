@@ -19,7 +19,7 @@ DBT := $(COMPOSE) --project-name $(PROJECT_PREFIX)_dbt --project-directory $(ROO
 SUPERSET := $(COMPOSE) --project-name $(PROJECT_PREFIX)_superset --project-directory $(ROOT)/src/superset --file $(ROOT)/src/superset/docker-compose.yaml
 
 .PHONY: help check-tools configure require-env network build up-core seed-reference \
-	bootstrap-airflow bootstrap-superset bootstrap up down status logs doctor smoke
+	bootstrap-airflow bootstrap-superset bootstrap up up-runtime down status logs doctor smoke
 
 help:
 	@echo "NYC Taxi local development"
@@ -73,18 +73,18 @@ seed-reference: require-env network
 
 bootstrap-airflow: require-env network
 	@$(AIRFLOW) up -d --wait postgres
-	@$(AIRFLOW) up --abort-on-container-exit --exit-code-from airflow-init airflow-init
-	@$(AIRFLOW) up -d --wait airflow-apiserver airflow-scheduler airflow-dag-processor airflow-triggerer
+	@$(AIRFLOW) run --rm --no-deps airflow-permissions
+	@$(AIRFLOW) run --rm --no-deps airflow-init
 
 bootstrap-superset: require-env network
 	@$(SUPERSET) up -d --wait superset-db
-	@$(SUPERSET) up --abort-on-container-exit --exit-code-from superset-init superset-init
-	@$(SUPERSET) up -d --wait superset
+	@$(SUPERSET) run --rm --no-deps superset-init
 
-bootstrap: check-tools require-env network build up-core seed-reference bootstrap-airflow bootstrap-superset
+bootstrap: check-tools require-env network build up-core bootstrap-airflow seed-reference bootstrap-superset up-runtime doctor
 
-up:
-	@$(MAKE) up-core
+up: up-core up-runtime
+
+up-runtime: require-env
 	@$(AIRFLOW) up -d --wait airflow-apiserver airflow-scheduler airflow-dag-processor airflow-triggerer
 	@$(SUPERSET) up -d --wait superset
 	@$(DBT) up -d --wait dbt

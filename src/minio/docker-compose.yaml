@@ -21,6 +21,7 @@ services:
       retries: 3
       start_period: 15s
     networks:
+      - default
       - platform_net
 
   minio-seed:
@@ -39,12 +40,13 @@ services:
     entrypoint: ["/bin/sh", "/reference/seed-minio.sh"]
     restart: "no"
     networks:
-      - platform_net
+      - default
 
 volumes:
   minio_data:
 
 networks:
+  default:
   platform_net:
     external: true
     name: platform_net
