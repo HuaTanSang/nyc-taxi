@@ -7,7 +7,7 @@ from airflow.sdk import Param
 TLC_TRIP_DATA_BASE_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data"
 
 S3_CONNECTION_ID = os.getenv("S3_CONNECTION_ID", "minio_s3")
-RAW_BUCKET_NAME = os.getenv("RAW_BUCKET_NAME", "raw")
+RAW_BUCKET_NAME = os.getenv("RAW_BUCKET_NAME", "nyc-taxi-raw")
 
 MULTIPART_CHUNK_SIZE = 16 * 1024 * 1024
 

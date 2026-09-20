@@ -4,6 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 ENV_FILE="$ROOT_DIR/.env"
 EXAMPLE_FILE="$ROOT_DIR/.env.example"
+EXPECTED_RAW_BUCKET_NAME=nyc-taxi-raw
 
 if [ ! -f "$ENV_FILE" ]; then
     cp "$EXAMPLE_FILE" "$ENV_FILE"
@@ -82,6 +83,12 @@ for key in $required_keys; do
         exit 1
     fi
 done
+
+raw_bucket_name=$(read_value "$ENV_FILE" RAW_BUCKET_NAME)
+if [ "$raw_bucket_name" != "$EXPECTED_RAW_BUCKET_NAME" ]; then
+    echo "RAW_BUCKET_NAME must be $EXPECTED_RAW_BUCKET_NAME (found: $raw_bucket_name)" >&2
+    exit 1
+fi
 
 chmod 600 "$ENV_FILE"
 echo "Configuration ready: $ENV_FILE"
