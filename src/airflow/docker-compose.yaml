@@ -13,8 +13,8 @@ x-airflow-env: &airflow-env
   AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "2"
   S3_CONNECTION_ID: ${S3_CONNECTION_ID:-minio_s3}
   RAW_BUCKET_NAME: ${RAW_BUCKET_NAME:-nyc-taxi-raw}
-  DBT_ROOT_PATH: /opt/airflow/dags/dbt
-  DBT_PROFILES_DIR: /opt/airflow/dags/dbt
+  DBT_ROOT_PATH: /opt/airflow/dbt
+  DBT_PROFILES_DIR: /opt/airflow/dbt
   CLICKHOUSE_HOST: clickhouse
   CLICKHOUSE_USER: ${CLICKHOUSE_USER}
   CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
@@ -44,8 +44,8 @@ services:
 
   airflow-permissions:
     build:
-      context: .
-      dockerfile: dockerfile
+      context: ../..
+      dockerfile: src/airflow/dockerfile
     image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     user: "0:0"
     environment:
@@ -58,8 +58,8 @@ services:
 
   airflow-init:
     build:
-      context: .
-      dockerfile: dockerfile
+      context: ../..
+      dockerfile: src/airflow/dockerfile
     image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment:
       <<: *airflow-env
@@ -71,7 +71,6 @@ services:
     volumes: &airflow-volumes
       - ./dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - ../dbt:/opt/airflow/dags/dbt
     command:
       - bash
       - -c
@@ -89,8 +88,8 @@ services:
 
   airflow-apiserver:
     build:
-      context: .
-      dockerfile: dockerfile
+      context: ../..
+      dockerfile: src/airflow/dockerfile
     image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment: *airflow-env
     user: "${AIRFLOW_UID}:0"

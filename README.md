@@ -49,6 +49,19 @@ The service-level `.env` files are deprecated. All Compose projects now receive
 configuration from the root `.env` and explicitly expose only the variables
 their containers need.
 
+## MinIO data contract
+
+The raw bucket is fixed at `nyc-taxi-raw`; `make configure` rejects a different
+`RAW_BUCKET_NAME` because Airflow and dbt must agree on the same object paths.
+Ingestion writes monthly trip files below
+`nyc-taxi-raw/<taxi_type>/year=<year>/month=<month>/`, and the reference zone
+lookup is stored at `nyc-taxi-raw/zone/taxi_zone_lookup.csv`.
+
+`make seed-reference` verifies the committed file's SHA-256 before uploading it.
+If the remote object has different content, seeding fails instead of overwriting
+it. Use `make seed-reference FORCE=1` only when intentionally replacing that
+reference object.
+
 ## Local endpoints
 
 | Service | Default URL | Login |
@@ -70,6 +83,9 @@ states; `make smoke` verifies the service endpoints and runs `dbt parse`.
 Named volumes preserve MinIO objects, ClickHouse data, Airflow metadata and
 logs, and Superset metadata across `make down`. Rebuild an image after changing
 its Dockerfile or Python requirements with `make build`, then run `make up`.
+The standalone dbt container bind-mounts `src/dbt`, so it sees model and macro
+edits immediately. Airflow uses a dbt project and manifest baked into its image;
+after changing dbt code used by a DAG, rebuild and restart the Airflow services.
 
 To rotate an application secret, first run `make down`, replace its value in
 `.env` (or set it to `__GENERATE__`), and rerun `make configure`. Database and
