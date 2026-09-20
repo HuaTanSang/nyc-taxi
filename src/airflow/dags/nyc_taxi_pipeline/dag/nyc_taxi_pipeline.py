@@ -14,16 +14,17 @@ from cosmos import (
     ProjectConfig,
     RenderConfig,
 )
-from cosmos.constants import InvocationMode, TestBehavior
+from cosmos.constants import InvocationMode, LoadMode, TestBehavior
 from cosmos.profiles import ClickhouseUserPasswordProfileMapping
 from nyc_taxi_pipeline.task.build_ingestion_plan import build_ingestion_plan
 
 DBT_ROOT_PATH = Path(
     os.getenv(
         "DBT_ROOT_PATH",
-        "/opt/airflow/dags/dbt",
+        "/opt/airflow/dbt",
     )
 )
+DBT_MANIFEST_PATH = DBT_ROOT_PATH / "target" / "manifest.json"
 DBT_RUNTIME_VARS = {
     "year": "{{ params.year }}",
     "month": "{{ params.month }}",
@@ -70,6 +71,7 @@ def nyc_taxi_pipeline():
     # dbt transformation
     project_config = ProjectConfig(
         dbt_project_path=str(DBT_ROOT_PATH),
+        manifest_path=str(DBT_MANIFEST_PATH),
     )
 
     profile_config = ProfileConfig(
@@ -95,6 +97,7 @@ def nyc_taxi_pipeline():
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=RenderConfig(
+            load_method=LoadMode.DBT_MANIFEST,
             select=[
                 "path:models/raw",
             ],
@@ -109,6 +112,7 @@ def nyc_taxi_pipeline():
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=RenderConfig(
+            load_method=LoadMode.DBT_MANIFEST,
             select=[
                 "path:models/staging",
             ],
@@ -123,6 +127,7 @@ def nyc_taxi_pipeline():
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=RenderConfig(
+            load_method=LoadMode.DBT_MANIFEST,
             select=[
                 "path:models/core",
                 "path:models/intermediate",
@@ -138,6 +143,7 @@ def nyc_taxi_pipeline():
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=RenderConfig(
+            load_method=LoadMode.DBT_MANIFEST,
             select=[
                 "path:models/marts",
             ],

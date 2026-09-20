@@ -3,14 +3,10 @@ services:
     build:
       context: .
       dockerfile: dockerfile       
-    image: nyc-taxi-dbt:latest
-    container_name: dbt
-
-    env_file:
-      - .env
+    image: nyc-taxi-dbt:${IMAGE_TAG:-local}
 
     ports:
-      - "8050:8050"
+      - "${DBT_DOCS_PORT:-8050}:8050"
 
     volumes:
       - .:/usr/app/dbt
@@ -19,6 +15,12 @@ services:
 
     environment:
       DBT_PROFILES_DIR: /usr/app/dbt
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
 
     command: >
       bash -c "

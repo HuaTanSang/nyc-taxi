@@ -3,16 +3,13 @@ services:
     build:
       context: .
       dockerfile: dockerfile
-    image: nyc-taxi-minio:latest
-    container_name: minio
+    image: nyc-taxi-minio:${IMAGE_TAG:-local}
     ports:
-      - "9000:9000"
-      - "9001:9001"
-    env_file:
-      - .env
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin} 
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-password123}    
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -24,12 +21,32 @@ services:
       retries: 3
       start_period: 15s
     networks:
+      - default
       - platform_net
+
+  minio-seed:
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z@sha256:aead63c77f9db9107f1696fb08ecb0faeda23729cde94b0f663edf4fe09728e3
+    profiles: ["bootstrap"]
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      RAW_BUCKET_NAME: ${RAW_BUCKET_NAME:-nyc-taxi-raw}
+      FORCE: ${FORCE:-0}
+    volumes:
+      - ../../data/reference:/reference:ro
+    entrypoint: ["/bin/sh", "/reference/seed-minio.sh"]
+    restart: "no"
+    networks:
+      - default
 
 volumes:
   minio_data:
 
 networks:
+  default:
   platform_net:
     external: true
     name: platform_net

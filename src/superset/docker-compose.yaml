@@ -1,47 +1,52 @@
+x-superset-environment: &superset-environment
+  SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+  SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+  SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB}
+  SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER}
+  SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+  SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME}
+  SUPERSET_ADMIN_FIRSTNAME: ${SUPERSET_ADMIN_FIRSTNAME}
+  SUPERSET_ADMIN_LASTNAME: ${SUPERSET_ADMIN_LASTNAME}
+  SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
+  SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+
 x-superset-common: &superset-common
   build:
     context: .
-    dockerfile: Dockerfile
+    dockerfile: dockerfile
     args:
       SUPERSET_VERSION: ${SUPERSET_VERSION:-6.0.0}
-  image: nyc-taxi-superset:${SUPERSET_VERSION:-6.0.0}  
-  env_file:
-    - .env
+  image: nyc-taxi-superset:${IMAGE_TAG:-local}
   environment:
-    SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
-    SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
-  networks:
-    - platform_net
-
+    <<: *superset-environment
 services:
   superset-db:
-    image: postgres:${POSTGRES_VERSION:-16-alpine}
-    container_name: superset-db
-    env_file:
-      - .env
+    image: postgres:${SUPERSET_POSTGRES_VERSION:-16.9-alpine}
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB}
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
     volumes:
       - superset_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
         ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
     restart: unless-stopped
-    networks:
-      - platform_net
 
   superset-init:
     <<: *superset-common
-    container_name: superset-init
+    environment:
+      <<: *superset-environment
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
     depends_on:
       superset-db:
         condition: service_healthy
@@ -53,25 +58,31 @@ services:
 
         superset db upgrade
 
-        superset fab create-admin \
-          --username "$${ADMIN_USERNAME}" \
-          --firstname "$${ADMIN_FIRSTNAME}" \
-          --lastname "$${ADMIN_LASTNAME}" \
-          --email "$${ADMIN_EMAIL}" \
-          --password "$${ADMIN_PASSWORD}" \
-        || echo "Admin creation failed or the account already exists; inspect the logs above."
+        existing_users=$$(superset fab list-users)
+        if printf '%s\n' "$${existing_users}" | grep -Fq "$${SUPERSET_ADMIN_USERNAME}"; then
+          echo "Superset admin already exists: $${SUPERSET_ADMIN_USERNAME}"
+        else
+          superset fab create-admin \
+            --username "$${SUPERSET_ADMIN_USERNAME}" \
+            --firstname "$${SUPERSET_ADMIN_FIRSTNAME}" \
+            --lastname "$${SUPERSET_ADMIN_LASTNAME}" \
+            --email "$${SUPERSET_ADMIN_EMAIL}" \
+            --password "$${SUPERSET_ADMIN_PASSWORD}"
+        fi
 
         superset init
+
+        python /app/bootstrap/bootstrap_clickhouse.py
     restart: "no"
 
   superset:
     <<: *superset-common
-    container_name: superset
     depends_on:
       superset-db:
         condition: service_healthy
-      superset-init:
-        condition: service_completed_successfully
+    networks:
+      - default
+      - platform_net
     ports:
       - "${SUPERSET_PORT:-8088}:8088"
     command:
@@ -103,6 +114,7 @@ volumes:
   superset_postgres_data:
 
 networks:
+  default:
   platform_net:
     external: true
     name: platform_net

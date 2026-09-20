@@ -1,11 +1,38 @@
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__DAG_RUN_CONF_OVERRIDES_PARAMS: "true"
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_POSTGRES_USER}:${AIRFLOW_POSTGRES_PASSWORD}@postgres/${AIRFLOW_POSTGRES_DB}
+  AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+  AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_API_JWT_SECRET}
+  AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+  AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+  AIRFLOW__CORE__PARALLELISM: "2"
+  AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "2"
+  S3_CONNECTION_ID: ${S3_CONNECTION_ID:-minio_s3}
+  RAW_BUCKET_NAME: ${RAW_BUCKET_NAME:-nyc-taxi-raw}
+  DBT_ROOT_PATH: /opt/airflow/dbt
+  DBT_PROFILES_DIR: /opt/airflow/dbt
+  CLICKHOUSE_HOST: clickhouse
+  CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  AIRFLOW_CONN_MINIO_S3: >-
+    {"conn_type":"aws","login":"${MINIO_ACCESS_KEY}","password":"${MINIO_SECRET_KEY}","extra":{"endpoint_url":"http://minio:9000","region_name":"us-east-1"}}
+  AIRFLOW_CONN_CLICKHOUSE_DEFAULT: >-
+    {"conn_type":"generic","host":"clickhouse","port":9000,"schema":"default","login":"${CLICKHOUSE_USER}","password":"${CLICKHOUSE_PASSWORD}","extra":{"clickhouse":true}}
+
 services:
   postgres:
     image: postgres:16.9
-    container_name: airflow-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${AIRFLOW_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AIRFLOW_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AIRFLOW_POSTGRES_DB}
     volumes:
       - airflow_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -14,59 +41,56 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    networks:
-      - platform_net
+
+  airflow-permissions:
+    build:
+      context: ../..
+      dockerfile: src/airflow/dockerfile
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
+    user: "0:0"
+    environment:
+      AIRFLOW_UID: ${AIRFLOW_UID}
+    volumes:
+      - airflow_logs:/opt/airflow/logs
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["chown -R \"$${AIRFLOW_UID}:0\" /opt/airflow/logs"]
+    restart: "no"
 
   airflow-init:
     build:
-      context: .
-      dockerfile: dockerfile
-    image: nyc-taxi-airflow:latest
-    container_name: airflow-init
-    env_file:
-      - .env
-    environment: &airflow-env
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__DAG_RUN_CONF_OVERRIDES_PARAMS: "true"
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
-      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
-      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-      AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
-      AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_API_JWT_SECRET}
-      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
-      AIRFLOW__CORE__PARALLELISM: "2"
-      AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "2"
+      context: ../..
+      dockerfile: src/airflow/dockerfile
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
+    environment:
+      <<: *airflow-env
       _AIRFLOW_DB_MIGRATE: "true"
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USERNAME}
       _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
-      
     user: "${AIRFLOW_UID}:0"
     volumes: &airflow-volumes
       - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./config:/opt/airflow/config
-      - ./utils:/opt/airflow/utils
-      - ../dbt:/opt/airflow/dags/dbt
-    command: version
+      - airflow_logs:/opt/airflow/logs
+    command:
+      - bash
+      - -c
+      - |
+        airflow pools set \
+          clickhouse_heavy \
+          1 \
+          "Serializes ClickHouse-heavy dbt tasks"
     depends_on:
       postgres:
         condition: service_healthy
+      airflow-permissions:
+        condition: service_completed_successfully
     restart: "no"
-    networks:
-      - platform_net
 
   airflow-apiserver:
     build:
-      context: .
-      dockerfile: dockerfile
-    image: nyc-taxi-airflow:latest
-    container_name: airflow-apiserver
-    env_file:
-      - .env
+      context: ../..
+      dockerfile: src/airflow/dockerfile
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment: *airflow-env
     user: "${AIRFLOW_UID}:0"
     volumes: *airflow-volumes
@@ -82,17 +106,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
     restart: unless-stopped
     networks:
+      - default
       - platform_net
 
   airflow-scheduler:
-    image: nyc-taxi-airflow:latest
-    container_name: airflow-scheduler
-    env_file:
-      - .env
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment: *airflow-env
     user: "${AIRFLOW_UID}:0"
     volumes: *airflow-volumes
@@ -106,17 +126,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
     restart: unless-stopped
     networks:
+      - default
       - platform_net
 
   airflow-dag-processor:
-    image: nyc-taxi-airflow:latest
-    container_name: airflow-dag-processor
-    env_file:
-      - .env
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment: *airflow-env
     user: "${AIRFLOW_UID}:0"
     volumes: *airflow-volumes
@@ -124,17 +140,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
     restart: unless-stopped
     networks:
+      - default
       - platform_net
 
   airflow-triggerer:
-    image: nyc-taxi-airflow:latest
-    container_name: airflow-triggerer
-    env_file:
-      - .env
+    image: nyc-taxi-airflow:${IMAGE_TAG:-local}
     environment: *airflow-env
     user: "${AIRFLOW_UID}:0"
     volumes: *airflow-volumes
@@ -142,16 +154,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
     restart: unless-stopped
     networks:
+      - default
       - platform_net
 
 volumes:
   airflow_postgres_data:
+  airflow_logs:
 
 networks:
+  default:
   platform_net:
     external: true
     name: platform_net

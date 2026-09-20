@@ -12,9 +12,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /opt/airflow
 
-COPY --chown=airflow:root airflow-requirements.txt ./
+COPY --chown=airflow:root \
+    src/airflow/airflow-requirements.txt \
+    /tmp/airflow-requirements.txt
+COPY --chown=airflow:root \
+    src/dbt/dbt-requirements.txt \
+    /tmp/dbt-requirements.txt
+
+RUN uv pip install \
+    --system \
+    --no-cache \
+    --requirement /tmp/airflow-requirements.txt \
+    --requirement /tmp/dbt-requirements.txt
+
+COPY --chown=airflow:root src/dbt /opt/airflow/dbt
 
 USER airflow
 
-RUN python -m pip install --no-cache-dir \
-    -r airflow-requirements.txt
+ENV DBT_PROFILES_DIR=/opt/airflow/dbt
+
+WORKDIR /opt/airflow/dbt
+
+RUN dbt deps \
+    && dbt parse \
+    && test -d dbt_packages/dbt_utils \
+    && test -f target/manifest.json
+
+WORKDIR /opt/airflow
