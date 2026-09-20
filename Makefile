@@ -126,6 +126,11 @@ logs: require-env
 
 doctor: require-env
 	@docker info >/dev/null || { echo "Docker daemon is not available" >&2; exit 1; }
+	@$(MINIO) config --quiet
+	@$(CLICKHOUSE) config --quiet
+	@$(AIRFLOW) config --quiet
+	@$(DBT) config --quiet
+	@$(SUPERSET) config --quiet
 	@docker network inspect platform_net >/dev/null 2>&1 || { echo "Missing Docker network: platform_net" >&2; exit 1; }
 	@check_container() { \
 		service="$$1"; \
@@ -151,7 +156,9 @@ doctor: require-env
 	check_container dbt "$$($(DBT) ps -q dbt)"; \
 	$(AIRFLOW) exec -T airflow-scheduler python -c \
 		'from airflow.sdk import Connection; Connection.get("minio_s3"); Connection.get("clickhouse_default")'; \
-	echo "Docker network, runtime services, and Airflow connections are healthy."
+	$(SUPERSET) exec -T superset python -c \
+		'from uuid import UUID; from sqlalchemy import text; from superset.app import create_app; app = create_app(); app_context = app.app_context(); app_context.push(); from superset import db; from superset.models.core import Database; database = db.session.query(Database).filter_by(uuid=UUID("b6585150-07d0-51e1-b45f-e8ca1c87af6e")).one(); assert database.database_name == "NYC Taxi ClickHouse"; engine_context = database.get_sqla_engine(); engine = engine_context.__enter__(); connection = engine.connect(); result = connection.execute(text("SELECT 1")).scalar(); connection.close(); engine_context.__exit__(None, None, None); assert result == 1'; \
+	echo "Compose config, Docker network, runtime services, Airflow connections, and Superset ClickHouse connection are healthy."
 
 smoke: require-env
 	@$(ROOT)/scripts/smoke.sh
