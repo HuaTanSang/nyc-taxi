@@ -15,6 +15,10 @@ COPY --chown=superset:superset \
     superset_config.py \
     /app/pythonpath/superset_config.py
 
+COPY --chown=superset:superset \
+    bootstrap \
+    /app/bootstrap
+
 ENV SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
 
 USER superset

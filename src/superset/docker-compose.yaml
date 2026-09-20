@@ -1,3 +1,15 @@
+x-superset-environment: &superset-environment
+  SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+  SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+  SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB}
+  SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER}
+  SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+  SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME}
+  SUPERSET_ADMIN_FIRSTNAME: ${SUPERSET_ADMIN_FIRSTNAME}
+  SUPERSET_ADMIN_LASTNAME: ${SUPERSET_ADMIN_LASTNAME}
+  SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
+  SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+
 x-superset-common: &superset-common
   build:
     context: .
@@ -6,16 +18,7 @@ x-superset-common: &superset-common
       SUPERSET_VERSION: ${SUPERSET_VERSION:-6.0.0}
   image: nyc-taxi-superset:${IMAGE_TAG:-local}
   environment:
-    SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
-    SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
-    SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB}
-    SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER}
-    SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
-    SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME}
-    SUPERSET_ADMIN_FIRSTNAME: ${SUPERSET_ADMIN_FIRSTNAME}
-    SUPERSET_ADMIN_LASTNAME: ${SUPERSET_ADMIN_LASTNAME}
-    SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
-    SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+    <<: *superset-environment
 services:
   superset-db:
     image: postgres:${SUPERSET_POSTGRES_VERSION:-16.9-alpine}
@@ -39,6 +42,11 @@ services:
 
   superset-init:
     <<: *superset-common
+    environment:
+      <<: *superset-environment
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
     depends_on:
       superset-db:
         condition: service_healthy
@@ -63,6 +71,8 @@ services:
         fi
 
         superset init
+
+        python /app/bootstrap/bootstrap_clickhouse.py
     restart: "no"
 
   superset:

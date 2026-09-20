@@ -30,6 +30,12 @@ The `minio_s3` and `clickhouse_default` Airflow connections are supplied through
 container environment variables. Airflow resolves them when parsing or running
 DAGs, but does not store or display them in the metadata database UI.
 
+The Superset bootstrap imports a database connection named
+`NYC Taxi ClickHouse`. Open SQL Lab, select that database, and run `SELECT 1`
+to explore the same ClickHouse instance used by dbt. The committed import
+template contains no credentials; `superset-init` renders the URI from the
+ignored root `.env` inside its one-shot container.
+
 Useful commands:
 
 ```bash
@@ -75,8 +81,10 @@ reference object.
 
 All credentials are stored in the ignored root `.env`. Trigger the parent taxi
 pipeline from the Airflow UI after the platform passes `make doctor` and
-`make smoke`. `make doctor` checks the current Docker network and container
-states; `make smoke` verifies the service endpoints and runs `dbt parse`.
+`make smoke`. `make doctor` validates every Compose file, checks the current
+Docker network and container states, resolves the Airflow connections, and
+runs `SELECT 1` through Superset's imported ClickHouse connection. `make smoke`
+verifies the service endpoints and runs `dbt parse`.
 
 ## Persistence and maintenance
 
@@ -86,6 +94,10 @@ its Dockerfile or Python requirements with `make build`, then run `make up`.
 The standalone dbt container bind-mounts `src/dbt`, so it sees model and macro
 edits immediately. Airflow uses a dbt project and manifest baked into its image;
 after changing dbt code used by a DAG, rebuild and restart the Airflow services.
+After changing the Superset bootstrap template or helper, run `make build` and
+`make bootstrap-superset`. If only the ClickHouse credentials or database name
+change in `.env`, rerun `make bootstrap-superset` to update the existing
+connection with the same stable UUID.
 
 To rotate an application secret, first run `make down`, replace its value in
 `.env` (or set it to `__GENERATE__`), and rerun `make configure`. Database and
