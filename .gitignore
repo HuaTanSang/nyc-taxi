@@ -226,3 +226,4 @@ src/dbt/.user.yml
 
 # testing
 test.*
+technique.md 

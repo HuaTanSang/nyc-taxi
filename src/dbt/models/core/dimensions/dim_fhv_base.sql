@@ -11,6 +11,8 @@
     )
 }}
 
+{{ reject_full_refresh() }}
+
 with base_numbers as (
     select dispatching_base_number as base_number
     from {{ ref('stg_fhv_trips') }}

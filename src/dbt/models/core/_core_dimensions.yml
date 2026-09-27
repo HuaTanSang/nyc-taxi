@@ -103,6 +103,14 @@ models:
         description: TLC Taxi Zone name.
       - name: service_zone
         description: TLC service-zone grouping.
+      - name: latitude
+        description: >-
+          Latitude of the WGS84 representative point used by the dashboard map;
+          null for lookup-only Unknown and Outside of NYC identifiers.
+      - name: longitude
+        description: >-
+          Longitude of the WGS84 representative point used by the dashboard map;
+          null for lookup-only Unknown and Outside of NYC identifiers.
 
   - name: dim_trip_type
     description: Green Taxi street-hail versus dispatch classification.

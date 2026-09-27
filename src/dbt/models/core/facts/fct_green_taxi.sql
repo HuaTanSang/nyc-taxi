@@ -14,6 +14,7 @@
     )
 }}
 
+{{ reject_full_refresh() }}
 
 
 with source as (
@@ -26,34 +27,36 @@ with source as (
 
 
 select
-    toInt16OrNull(toString(vendor_id)) as vendor_id,
-    toInt16OrNull(toString(rate_code_id)) as rate_code_id,
-    toInt16OrNull(toString(payment_type_id)) as payment_type_id,
-    toInt16OrNull(toString(trip_type_id)) as trip_type_id,
+    vendor_id,
+    rate_code_id,
+    payment_type_id,
+    trip_type_id,
+    payment_type_id = 0 as is_flex_fare_trip,
 
     pickup_datetime,
     dropoff_datetime,
     toYYYYMMDD(pickup_datetime) as pickup_date_id,
     toYYYYMMDD(dropoff_datetime) as dropoff_date_id,
-    toInt32OrNull(toString(pickup_location_id)) as pickup_location_id,
-    toInt32OrNull(toString(dropoff_location_id)) as dropoff_location_id,
+    pickup_location_id,
+    dropoff_location_id,
 
-    toDecimal64OrNull(toString(trip_distance), 3) as trip_distance_miles,
-    toInt16OrNull(toString(passenger_count)) as passenger_count,
-    toDecimal64OrNull(toString(fare_amount), 2) as fare_amount,
-    toDecimal64OrNull(toString(extra), 2) as extra,
-    toDecimal64OrNull(toString(mta_tax), 2) as mta_tax,
-    toDecimal64OrNull(toString(tip_amount), 2) as tip_amount,
-    toDecimal64OrNull(toString(tolls_amount), 2) as tolls_amount,
-    toDecimal64OrNull(toString(ehail_fee), 2) as ehail_fee,
-    toDecimal64OrNull(toString(improvement_surcharge), 2) as improvement_surcharge,
-    toDecimal64OrNull(toString(congestion_surcharge), 2) as congestion_surcharge,
-    toDecimal64OrNull(toString(cbd_congestion_fee), 2) as cbd_congestion_fee,
+    trip_distance_miles,
+    passenger_count,
+    fare_amount,
+    extra,
+    mta_tax,
+    tip_amount,
+    tolls_amount,
+    improvement_surcharge,
+    congestion_surcharge,
+    cbd_congestion_fee,
     cast(null as Nullable(Decimal64(2))) as airport_fee,
-    toDecimal64OrNull(toString(total_amount), 2) as total_amount,
+    total_amount,
     dateDiff('second', pickup_datetime, dropoff_datetime) as trip_duration_seconds,
     toUInt16(assumeNotNull(source_year)) as source_year,
     toUInt8(assumeNotNull(source_month)) as source_month,
-    source_path, 
-    source_file
+    source_path,
+    source_file,
+    source_etag,
+    source_file_id
 from source

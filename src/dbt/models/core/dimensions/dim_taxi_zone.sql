@@ -10,9 +10,13 @@
 }}
 
 select
-    toInt32(assumeNotNull(location_id)) as location_id,
-    borough,
-    zone,
-    service_zone
-from {{ ref('stg_locations') }}
-where location_id is not null
+    toInt32(assumeNotNull(locations.location_id)) as location_id,
+    locations.borough,
+    locations.zone,
+    locations.service_zone,
+    centroids.latitude,
+    centroids.longitude
+from {{ ref('stg_locations') }} as locations
+left join {{ ref('stg_zone_centroids') }} as centroids
+    on locations.location_id = centroids.location_id
+where locations.location_id is not null

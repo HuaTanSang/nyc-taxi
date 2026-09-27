@@ -14,6 +14,8 @@
     )
 }}
 
+{{ reject_full_refresh() }}
+
 with source as (
     select *
     from {{ ref('stg_fhv_trips') }}
@@ -30,13 +32,13 @@ select
     dropoff_datetime,
     toYYYYMMDD(pickup_datetime) as pickup_date_id,
     toYYYYMMDD(dropoff_datetime) as dropoff_date_id,
-    toInt32OrNull(toString(pickup_location_id)) as pickup_location_id,
-    toInt32OrNull(toString(dropoff_location_id)) as dropoff_location_id,
+    pickup_location_id,
+    dropoff_location_id,
 
     multiIf(
         sr_flag = 1,
         true,
-        sr_flag = 0,
+        sr_flag = 0 or sr_flag is null,
         false,
         cast(null as Nullable(Bool))
     ) as shared_ride_flag,
@@ -44,6 +46,8 @@ select
     dateDiff('second', pickup_datetime, dropoff_datetime) as trip_duration_seconds,
     toUInt16(assumeNotNull(source_year)) as source_year,
     toUInt8(assumeNotNull(source_month)) as source_month,
-    source_path, 
-    source_file
+    source_path,
+    source_file,
+    source_etag,
+    source_file_id
 from source

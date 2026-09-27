@@ -14,7 +14,12 @@ from cosmos import (
     ProjectConfig,
     RenderConfig,
 )
-from cosmos.constants import InvocationMode, LoadMode, TestBehavior
+from cosmos.constants import (
+    InvocationMode,
+    LoadMode,
+    TestBehavior,
+    TestIndirectSelection,
+)
 from cosmos.profiles import ClickhouseUserPasswordProfileMapping
 from nyc_taxi_pipeline.task.build_ingestion_plan import build_ingestion_plan
 
@@ -88,6 +93,7 @@ def nyc_taxi_pipeline():
 
     execution_config = ExecutionConfig(
         invocation_mode=InvocationMode.DBT_RUNNER,
+        test_indirect_selection=TestIndirectSelection.CAUTIOUS,
     )
 
     load_to_raw_layer = DbtTaskGroup(
@@ -131,6 +137,7 @@ def nyc_taxi_pipeline():
             select=[
                 "path:models/core",
                 "path:models/intermediate",
+                "tag:quality_core",
             ],
             test_behavior=TestBehavior.AFTER_ALL,
         ),
@@ -146,6 +153,7 @@ def nyc_taxi_pipeline():
             load_method=LoadMode.DBT_MANIFEST,
             select=[
                 "path:models/marts",
+                "tag:quality_marts",
             ],
             test_behavior=TestBehavior.AFTER_ALL,
         ),

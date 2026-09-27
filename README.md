@@ -60,13 +60,13 @@ their containers need.
 The raw bucket is fixed at `nyc-taxi-raw`; `make configure` rejects a different
 `RAW_BUCKET_NAME` because Airflow and dbt must agree on the same object paths.
 Ingestion writes monthly trip files below
-`nyc-taxi-raw/<taxi_type>/year=<year>/month=<month>/`, and the reference zone
-lookup is stored at `nyc-taxi-raw/zone/taxi_zone_lookup.csv`.
+`nyc-taxi-raw/<taxi_type>/year=<year>/month=<month>/`, and the zone lookup and
+representative-point snapshots are stored below `nyc-taxi-raw/zone/`.
 
-`make seed-reference` verifies the committed file's SHA-256 before uploading it.
-If the remote object has different content, seeding fails instead of overwriting
-it. Use `make seed-reference FORCE=1` only when intentionally replacing that
-reference object.
+`make seed-reference` verifies both committed reference files' SHA-256 values
+before uploading them. If a remote object has different content, seeding fails
+instead of overwriting it. Use `make seed-reference FORCE=1` only when
+intentionally replacing reference objects.
 
 ## Local endpoints
 

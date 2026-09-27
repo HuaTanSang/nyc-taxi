@@ -32,41 +32,52 @@ holidays as (
         multiIf(
             toMonth(full_date) = 1 and toDayOfMonth(full_date) = 1,
             'New Year''s Day',
+
             toMonth(full_date) = 1
                 and toDayOfWeek(full_date) = 1
                 and toDayOfMonth(full_date) between 15 and 21,
             'Martin Luther King Jr. Day',
+
             toMonth(full_date) = 2
                 and toDayOfWeek(full_date) = 1
                 and toDayOfMonth(full_date) between 15 and 21,
             'Presidents'' Day',
+
             toMonth(full_date) = 5
                 and toDayOfWeek(full_date) = 1
                 and toDayOfMonth(full_date) >= 25,
             'Memorial Day',
+
             toYear(full_date) >= 2021
                 and toMonth(full_date) = 6
                 and toDayOfMonth(full_date) = 19,
             'Juneteenth National Independence Day',
+
             toMonth(full_date) = 7 and toDayOfMonth(full_date) = 4,
             'Independence Day',
+
             toMonth(full_date) = 9
                 and toDayOfWeek(full_date) = 1
                 and toDayOfMonth(full_date) <= 7,
             'Labor Day',
+
             toMonth(full_date) = 10
                 and toDayOfWeek(full_date) = 1
                 and toDayOfMonth(full_date) between 8 and 14,
             'Columbus Day',
+
             toMonth(full_date) = 11 and toDayOfMonth(full_date) = 11,
             'Veterans Day',
+
             toMonth(full_date) = 11
                 and toDayOfWeek(full_date) = 4
                 and toDayOfMonth(full_date) between 22 and 28,
             'Thanksgiving Day',
+
             toMonth(full_date) = 12 and toDayOfMonth(full_date) = 25,
             'Christmas Day',
             cast(null as Nullable(String))
+            
         ) as holiday_name
     from calendar
 )

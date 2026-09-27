@@ -33,6 +33,8 @@ models:
                 field: payment_type_id
               config:
                 severity: warn
+      - name: is_flex_fare_trip
+        description: True only for payment code 0; missing Flex Fare fields remain null.
       - name: pickup_datetime
         description: Timestamp when the meter was engaged.
       - name: dropoff_datetime
@@ -105,6 +107,9 @@ models:
       - name: source_month
         description: Month of the monthly source object and physical partition.
         data_tests: [not_null]
+      - name: source_file_id
+        description: Stable identifier of the source object derived from path and ETag.
+        data_tests: [not_null]
 
   - name: fct_green_taxi
     description: >-
@@ -138,6 +143,8 @@ models:
                 field: payment_type_id
               config:
                 severity: warn
+      - name: is_flex_fare_trip
+        description: True only for payment code 0; missing Flex Fare fields remain null.
       - name: trip_type_id
         description: Street-hail or dispatch trip-type code.
         data_tests:
@@ -223,6 +230,9 @@ models:
       - name: source_month
         description: Month of the monthly source object and physical partition.
         data_tests: [not_null]
+      - name: source_file_id
+        description: Stable identifier of the source object derived from path and ETag.
+        data_tests: [not_null]
 
   - name: fct_fhv_taxi
     description: >-
@@ -288,7 +298,9 @@ models:
               config:
                 severity: warn
       - name: shared_ride_flag
-        description: Nullable normalization of the TLC SR_Flag field.
+        description: >-
+          TLC shared-ride indicator. Source null is normalized to false because
+          the official FHV dictionary defines null as a non-shared ride.
       - name: trip_duration_seconds
         description: Drop-off minus pickup time in seconds.
       - name: source_year
@@ -296,6 +308,9 @@ models:
         data_tests: [not_null]
       - name: source_month
         description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_file_id
+        description: Stable identifier of the source object derived from path and ETag.
         data_tests: [not_null]
 
   - name: fct_fhvhv_taxi
@@ -437,4 +452,7 @@ models:
         data_tests: [not_null]
       - name: source_month
         description: Month of the monthly source object and physical partition.
+        data_tests: [not_null]
+      - name: source_file_id
+        description: Stable identifier of the source object derived from path and ETag.
         data_tests: [not_null]

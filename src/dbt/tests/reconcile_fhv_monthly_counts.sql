@@ -1,3 +1,5 @@
+{{ config(tags=["quality_core"]) }}
+
 with counts as (
     select
         (select count() from {{ ref('raw_fhv_taxi') }}) as raw_count,

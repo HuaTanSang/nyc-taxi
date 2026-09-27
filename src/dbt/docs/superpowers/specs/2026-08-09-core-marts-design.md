@@ -39,10 +39,10 @@ It also contains one atomic fact per TLC dataset:
 - `fct_fhv_taxi`
 - `fct_fhvhv_taxi`
 
-Each fact remains at one row per source record. Deterministic `trip_sk` values
-are generated from the service type, source path, and a stable row ordinal
-within the source file. The row ordinal is retained as `source_row_number` for
-lineage.
+Each fact remains at one row per source record. The TLC Parquet contract does
+not expose a stable row ordinal, so the implementation deliberately does not
+fabricate a trip key. Source path, file, ETag, and `source_file_id` are retained
+for file-level lineage, and reconciliation tests protect row counts.
 
 The DBML relationships from event timestamps directly to `dim_date.date_id`
 are type-incompatible. The implementation therefore retains every event
@@ -66,30 +66,30 @@ The default range is 2009-01-01 through 2030-12-31.
 
 ## Intermediate contract
 
-`int_trips_unioned` exposes only measures that can be compared safely across
-service types: event time, zone, passenger count, distance, duration, passenger
-charge, and tip. Missing source measures remain `NULL`; they are never replaced
-with zero in this contract.
-
-For FHVHV, `passenger_charge_amount` is calculated as the reported passenger
-fare plus tolls, BCF, sales tax, congestion surcharges, airport fee, CBD fee,
-and tips. FHV has no monetary or distance measures in the TLC source and keeps
-those fields null.
+`int_trips_conformed` exposes only mobility measures that can be compared safely
+across service types: event time, zone, passenger count, distance, and calculated
+duration. Applicability, reporting, and validity flags distinguish structural
+source gaps from missing values. Missing measures remain `NULL`; they are never
+replaced with zero. FHV `SR_Flag` is the only source null normalized to false,
+because the official data dictionary defines null as a non-shared ride.
 
 ## Serving marts
 
-The existing `serving` schema is the physical mart layer. It contains:
+The `marts` schema separates physical source-partition aggregates from public
+serving views. It contains:
 
-- `mart_trip_daily`: daily KPIs by service type.
-- `mart_zone_daily`: daily pickup demand and measures by service type and zone.
-- `mart_street_taxi_payment_daily`: Yellow/Green fare and payment analysis.
-- `mart_fhvhv_provider_daily`: FHVHV provider, wait-time, shared-ride, WAV,
-  passenger-charge, and driver-pay KPIs.
+- `agg_trip_daily_by_source`, `agg_trip_hourly_by_source`, and
+  `agg_pickup_zone_daily_by_source`: monthly replaceable additive aggregates.
+- `mart_trip_daily`: daily mobility KPIs by service type.
+- `mart_trip_hourly`: pickup-hour patterns by service type.
+- `mart_pickup_zone_daily`: mappable pickup-zone demand for Yellow, Green, and
+  FHVHV; FHV is excluded because pickup-zone coverage is insufficient.
+- `mart_data_quality_monthly`: long-form coverage and anomaly metrics.
 
-All marts use explicit grains and retain `source_year` and `source_month` so
-monthly reruns can replace only the affected source partition. Average and rate
-KPIs protect against zero denominators. Null source coverage remains visible
-through recorded-value counts in the common marts.
+Public marts re-aggregate across source partitions at the event-date grain.
+They expose sums and denominators instead of precomputed averages so Superset
+can roll up days correctly. Structural source gaps remain null and are labelled
+`not_applicable` in the quality mart.
 
 ## Data quality and documentation
 

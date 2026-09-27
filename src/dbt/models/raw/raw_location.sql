@@ -16,6 +16,6 @@ select
     _file as source_file
 from {{ s3_source(
     object_key,
-    'CSV',
+    'CSVWithNames',
     'LocationID UInt32, Borough String, Zone String, service_zone String'
 ) }}

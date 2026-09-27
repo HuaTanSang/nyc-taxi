@@ -14,6 +14,7 @@
     )
 }}
 
+{{ reject_full_refresh() }}
 
 with source as (
     select *
@@ -36,8 +37,8 @@ select
     toYYYYMMDD(on_scene_datetime) as on_scene_date_id,
     toYYYYMMDD(pickup_datetime) as pickup_date_id,
     toYYYYMMDD(dropoff_datetime) as dropoff_date_id,
-    toInt32OrNull(toString(pickup_location_id)) as pickup_location_id,
-    toInt32OrNull(toString(dropoff_location_id)) as dropoff_location_id,
+    pickup_location_id,
+    dropoff_location_id,
 
     {{ to_nullable_bool('shared_request_flag') }} as shared_request_flag,
     {{ to_nullable_bool('shared_match_flag') }} as shared_match_flag,
@@ -45,17 +46,17 @@ select
     {{ to_nullable_bool('wav_request_flag') }} as wav_request_flag,
     {{ to_nullable_bool('wav_match_flag') }} as wav_match_flag,
 
-    toDecimal64OrNull(toString(trip_miles), 3) as trip_miles,
-    toInt64OrNull(toString(trip_time_seconds)) as reported_trip_time_seconds,
-    toDecimal64OrNull(toString(base_passenger_fare), 2) as base_passenger_fare,
-    toDecimal64OrNull(toString(tolls), 2) as tolls,
-    toDecimal64OrNull(toString(bcf), 2) as bcf,
-    toDecimal64OrNull(toString(sales_tax), 2) as sales_tax,
-    toDecimal64OrNull(toString(congestion_surcharge), 2) as congestion_surcharge,
-    toDecimal64OrNull(toString(airport_fee), 2) as airport_fee,
-    toDecimal64OrNull(toString(cbd_congestion_fee), 2) as cbd_congestion_fee,
-    toDecimal64OrNull(toString(tips), 2) as tips,
-    toDecimal64OrNull(toString(driver_pay), 2) as driver_pay,
+    trip_miles,
+    trip_time_seconds as reported_trip_time_seconds,
+    base_passenger_fare,
+    tolls,
+    bcf,
+    sales_tax,
+    congestion_surcharge,
+    airport_fee,
+    cbd_congestion_fee,
+    tips,
+    driver_pay,
 
     dateDiff('second', pickup_datetime, dropoff_datetime) as calculated_trip_duration_seconds,
     dateDiff('second', request_datetime, pickup_datetime) as request_to_pickup_seconds,
@@ -63,7 +64,9 @@ select
     dateDiff('second', on_scene_datetime, pickup_datetime) as on_scene_to_pickup_seconds,
     toUInt16(assumeNotNull(source_year)) as source_year,
     toUInt8(assumeNotNull(source_month)) as source_month,
-    source_path, 
-    source_file
+    source_path,
+    source_file,
+    source_etag,
+    source_file_id
 
 from source

@@ -14,7 +14,7 @@ models:
         description: Date and time when the meter was disengaged.
       - name: passenger_count
         description: Driver-entered number of passengers in the vehicle.
-      - name: trip_distance
+      - name: trip_distance_miles
         description: Trip distance reported by the taximeter in miles.
       - name: rate_code_id
         description: Final rate code in effect at the end of the trip.
@@ -84,7 +84,7 @@ models:
         description: TLC Taxi Zone identifier where the meter was disengaged.
       - name: passenger_count
         description: Driver-entered number of passengers in the vehicle.
-      - name: trip_distance
+      - name: trip_distance_miles
         description: Trip distance reported by the taximeter in miles.
       - name: fare_amount
         description: Time-and-distance fare calculated by the meter.
@@ -257,3 +257,17 @@ models:
         description: Source object filename.
         tests:
           - not_null
+
+  - name: stg_zone_centroids
+    description: WGS84 representative points generated from the official TLC taxi-zone shapefile.
+    columns:
+      - name: location_id
+        data_tests: [not_null, unique]
+      - name: latitude
+        data_tests: [not_null]
+      - name: longitude
+        data_tests: [not_null]
+      - name: source_path
+        data_tests: [not_null]
+      - name: source_file
+        data_tests: [not_null]
