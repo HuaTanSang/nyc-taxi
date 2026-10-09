@@ -50,7 +50,7 @@ COMMON_DBT_OPERATOR_ARGS = {
 
 @dag(
     dag_id="nyc_taxi_pipeline",
-    schedule=None,
+    schedule="@monthly",
     start_date=pendulum.datetime(2025, 1, 1, tz="UTC"),
     catchup=False,
     max_active_runs=1,

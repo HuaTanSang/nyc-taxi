@@ -7,6 +7,7 @@
         engine='MergeTree()',
         partition_by=['source_year', 'source_month'],
         order_by=['source_year', 'source_month', 'service_type', 'pickup_date_id'],
+        settings={'allow_nullable_key': 1},
         tags=['serving', 'aggregate', 'daily']
     )
 }}

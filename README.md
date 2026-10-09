@@ -36,6 +36,10 @@ to explore the same ClickHouse instance used by dbt. The committed import
 template contains no credentials; `superset-init` renders the URI from the
 ignored root `.env` inside its one-shot container.
 
+When a prepared dashboard export is committed, `make bootstrap` also imports
+its datasets, charts, and dashboard. Follow the [dashboard guide](src/superset/SIMPLE_OVERVIEW_DASHBOARD.md)
+to create it once in Superset, export it safely, and share it through Git.
+
 Useful commands:
 
 ```bash

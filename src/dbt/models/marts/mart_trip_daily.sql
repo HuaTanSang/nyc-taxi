@@ -9,30 +9,30 @@
 
 with reaggregated as (
     select
-        pickup_date_id,
-        pickup_date,
-        service_type,
-        sum(trip_count) as trip_count,
-        sum(passenger_count_recorded_count) as passenger_count_recorded_count,
+        source.pickup_date_id,
+        source.pickup_date,
+        source.service_type,
+        sum(source.trip_count) as trip_count,
+        sum(source.passenger_count_recorded_count) as passenger_count_recorded_count,
         if(
-            sum(passenger_count_recorded_count) = 0,
+            sum(source.passenger_count_recorded_count) = 0,
             cast(null as Nullable(Int64)),
-            sum(ifNull(passenger_count_sum, 0))
+            sum(ifNull(source.passenger_count_sum, 0))
         ) as passenger_count_sum,
-        sum(distance_valid_count) as distance_valid_count,
+        sum(source.distance_valid_count) as distance_valid_count,
         if(
-            sum(distance_valid_count) = 0,
+            sum(source.distance_valid_count) = 0,
             cast(null as Nullable(Decimal64(3))),
-            sum(ifNull(distance_sum_miles, toDecimal64(0, 3)))
+            sum(ifNull(source.distance_sum_miles, toDecimal64(0, 3)))
         ) as distance_sum_miles,
-        sum(duration_valid_count) as duration_valid_count,
+        sum(source.duration_valid_count) as duration_valid_count,
         if(
-            sum(duration_valid_count) = 0,
+            sum(source.duration_valid_count) = 0,
             cast(null as Nullable(Int64)),
-            sum(ifNull(duration_sum_seconds, 0))
+            sum(ifNull(source.duration_sum_seconds, 0))
         ) as duration_sum_seconds
-    from {{ ref('agg_trip_daily_by_source') }}
-    group by pickup_date_id, pickup_date, service_type
+    from {{ ref('agg_trip_daily_by_source') }} as source
+    group by source.pickup_date_id, source.pickup_date, source.service_type
 )
 
 select

@@ -13,6 +13,7 @@
             'pickup_date_id',
             'pickup_location_id'
         ],
+        settings={'allow_nullable_key': 1},
         tags=['serving', 'aggregate', 'daily', 'zone']
     )
 }}
