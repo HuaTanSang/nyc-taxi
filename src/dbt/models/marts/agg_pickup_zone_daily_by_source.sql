@@ -34,6 +34,7 @@ where source_year = toUInt16({{ var('year') | int }})
   and pickup_datetime_is_reported
   and pickup_zone_is_reported
   and service_type in ('yellow', 'green', 'fhvhv')
+  and not event_outside_source_month
 group by
     source_year,
     source_month,

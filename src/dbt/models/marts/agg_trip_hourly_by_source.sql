@@ -32,6 +32,7 @@ from {{ ref('int_trips_conformed') }}
 where source_year = toUInt16({{ var('year') | int }})
   and source_month = toUInt8({{ var('month') | int }})
   and pickup_datetime_is_reported
+  and not event_outside_source_month
 group by
     source_year,
     source_month,

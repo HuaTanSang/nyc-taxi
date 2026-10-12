@@ -20,6 +20,7 @@ with trips as (
     where source_year = toUInt16({{ var('year') | int }})
       and source_month = toUInt8({{ var('month') | int }})
       and pickup_datetime_is_reported
+      and not event_outside_source_month
 )
 
 select
