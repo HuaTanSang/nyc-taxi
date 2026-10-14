@@ -1,0 +1,13 @@
+.git/
+.env
+.venv/
+**/__pycache__/
+**/*.py[codz]
+**/.pytest_cache/
+**/.ruff_cache/
+src/airflow/logs/
+src/airflow/plugins/
+src/airflow/config/
+src/dbt/dbt_packages/
+src/dbt/logs/
+src/dbt/target/

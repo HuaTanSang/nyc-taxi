@@ -1,0 +1,18 @@
+database_name: NYC Taxi ClickHouse
+sqlalchemy_uri: "__CLICKHOUSE_SQLALCHEMY_URI__"
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: false
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+impersonate_user: false
+extra:
+  metadata_params: {}
+  engine_params: {}
+  metadata_cache_timeout: {}
+  schemas_allowed_for_file_upload: []
+  allows_virtual_table_explore: true
+uuid: b6585150-07d0-51e1-b45f-e8ca1c87af6e
+version: 1.0.0

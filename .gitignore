@@ -156,6 +156,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/
 
 # Spyder project settings
 .spyderproject
@@ -216,3 +217,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# logs
+src/airflow/logs
+src/dbt/logs
+src/dbt/dbt_packages/
+src/dbt/.user.yml
+
+# testing
+test.*
+technique.md 
