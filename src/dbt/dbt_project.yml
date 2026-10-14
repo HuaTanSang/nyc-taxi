@@ -1,0 +1,48 @@
+name: nyc_taxi
+version: "1.0.0"
+config-version: 2
+
+profile: nyc_taxi
+
+model-paths:
+  - models
+
+macro-paths:
+  - macros
+
+test-paths:
+  - tests
+
+target-path: target
+
+clean-targets:
+  - target
+  - dbt_packages
+  - logs
+
+vars:
+  year: 2025
+  month: 1
+  force_reload: false
+  airflow_run_id: manual
+  calendar_start_date: "2009-01-01"
+  calendar_end_date: "2030-12-31"
+  business_timezone: "America/New_York"
+
+models:
+  nyc_taxi:
+    raw:
+      +schema: raw
+      +materialized: view
+
+    staging:
+      +schema: staging
+
+    intermediate:
+      +schema: intermediate
+
+    core:
+      +schema: core
+
+    marts:
+      +schema: marts

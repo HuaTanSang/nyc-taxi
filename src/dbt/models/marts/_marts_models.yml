@@ -1,0 +1,191 @@
+version: 2
+
+models:
+  - name: agg_trip_daily_by_source
+    description: Additive daily trip metrics isolated by physical source partition.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              [source_year, source_month, pickup_date_id, service_type]
+    columns:
+      - name: source_year
+        data_tests: [not_null]
+      - name: source_month
+        data_tests: [not_null]
+      - name: pickup_date_id
+        data_tests: [not_null]
+      - name: service_type
+        data_tests: [not_null]
+      - name: trip_count
+        data_tests: [not_null]
+
+  - name: agg_trip_hourly_by_source
+    description: Additive hourly trip counts isolated by physical source partition.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              [source_year, source_month, pickup_date_id, pickup_hour, service_type]
+    columns:
+      - name: source_year
+        data_tests: [not_null]
+      - name: source_month
+        data_tests: [not_null]
+      - name: pickup_date_id
+        data_tests: [not_null]
+      - name: pickup_hour
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+      - name: service_type
+        data_tests: [not_null]
+      - name: trip_count
+        data_tests: [not_null]
+
+  - name: agg_pickup_zone_daily_by_source
+    description: >-
+      Additive pickup-zone counts for Yellow, Green, and FHVHV. FHV is excluded
+      because the official source has insufficient pickup-zone coverage.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              [source_year, source_month, pickup_date_id, service_type, pickup_location_id]
+    columns:
+      - name: pickup_location_id
+        data_tests: [not_null]
+      - name: service_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhvhv]
+
+  - name: mart_trip_daily
+    description: >-
+      Dashboard-ready daily metrics. Grain is pickup date and service type across
+      all source partitions. All averages must be calculated from sums and counts.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [pickup_date_id, service_type]
+    columns:
+      - name: pickup_date_id
+        data_tests: [not_null]
+      - name: pickup_date
+        data_tests: [not_null]
+      - name: service_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhv, fhvhv]
+      - name: trip_count
+        description: Additive number of trip records with a reported pickup timestamp.
+        data_tests: [not_null]
+      - name: passenger_count_recorded_count
+        description: Additive denominator for passenger-count metrics.
+      - name: passenger_count_sum
+        description: Nullable additive passenger count; null where unavailable.
+      - name: distance_valid_count
+        description: Additive denominator for average distance.
+      - name: distance_sum_miles
+        description: Nullable additive non-negative reported distance.
+      - name: duration_valid_count
+        description: Additive denominator for average duration.
+      - name: duration_sum_seconds
+        description: Nullable additive non-negative calculated duration.
+
+  - name: mart_trip_hourly
+    description: Dashboard-ready trip counts by pickup date, hour, and service.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [pickup_date_id, pickup_hour, service_type]
+    columns:
+      - name: pickup_date_id
+        data_tests: [not_null]
+      - name: pickup_hour
+        data_tests: [not_null]
+      - name: service_type
+        data_tests: [not_null]
+      - name: trip_count
+        data_tests: [not_null]
+
+  - name: mart_pickup_zone_daily
+    description: >-
+      Dashboard map dataset at pickup date, service, and TLC zone grain. Contains
+      Yellow, Green, and FHVHV records with a known zone and representative point.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [pickup_date_id, service_type, pickup_location_id]
+    columns:
+      - name: pickup_date_id
+        data_tests: [not_null]
+      - name: service_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhvhv]
+      - name: pickup_location_id
+        data_tests: [not_null]
+      - name: pickup_latitude
+        data_tests: [not_null]
+      - name: pickup_longitude
+        data_tests: [not_null]
+      - name: trip_count
+        data_tests: [not_null]
+
+  - name: mart_data_quality_monthly
+    description: >-
+      Monthly long-form coverage and anomaly metrics. Structural source gaps use
+      not_applicable and a null percentage rather than a misleading zero.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              [source_year, source_month, service_type, metric_name]
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "reported_count <= eligible_count"
+    columns:
+      - name: source_year
+        data_tests: [not_null]
+      - name: source_month
+        data_tests: [not_null]
+      - name: source_period
+        data_tests: [not_null]
+      - name: service_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhv, fhvhv]
+      - name: metric_name
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - pickup_datetime
+                  - pickup_zone
+                  - dropoff_zone
+                  - duration
+                  - distance
+                  - passenger_count
+                  - event_outside_source_month
+      - name: coverage_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [measured, not_applicable, anomaly_rate]
+      - name: reported_count
+        data_tests: [not_null]
+      - name: eligible_count
+        data_tests: [not_null]

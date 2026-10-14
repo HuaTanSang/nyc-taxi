@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: int_trips_conformed
+    description: >-
+      Conformed trip contract for the four TLC service families. Source nulls are
+      preserved, structural availability is explicit, and validity flags control
+      which values may contribute to dashboard averages.
+    columns:
+      - name: service_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [yellow, green, fhv, fhvhv]
+      - name: source_year
+        data_tests: [not_null]
+      - name: source_month
+        data_tests: [not_null]
+      - name: source_file_id
+        data_tests: [not_null]
+      - name: passenger_count_is_applicable
+        data_tests: [not_null]
+      - name: distance_is_applicable
+        data_tests: [not_null]
+      - name: pickup_datetime_is_reported
+        data_tests: [not_null]
+      - name: pickup_zone_is_reported
+        data_tests: [not_null]
+      - name: dropoff_zone_is_reported
+        data_tests: [not_null]
+      - name: duration_is_valid
+        data_tests: [not_null]
+      - name: distance_is_valid
+        data_tests: [not_null]
+      - name: event_outside_source_month
+        data_tests: [not_null]

@@ -1,0 +1,24 @@
+ARG SUPERSET_VERSION=6.0.0
+
+FROM apache/superset:${SUPERSET_VERSION}
+
+USER root
+
+COPY superset-requirements.txt /tmp/superset-requirements.txt
+
+RUN uv pip install \
+    --python /app/.venv/bin/python \
+    --no-cache \
+    --requirement /tmp/superset-requirements.txt
+
+COPY --chown=superset:superset \
+    superset_config.py \
+    /app/pythonpath/superset_config.py
+
+COPY --chown=superset:superset \
+    bootstrap \
+    /app/bootstrap
+
+ENV SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
+
+USER superset
