@@ -18,7 +18,7 @@ AIRFLOW := $(COMPOSE) --project-name $(PROJECT_PREFIX)_airflow --project-directo
 DBT := $(COMPOSE) --project-name $(PROJECT_PREFIX)_dbt --project-directory $(ROOT)/src/dbt --file $(ROOT)/src/dbt/docker-compose.yaml
 SUPERSET := $(COMPOSE) --project-name $(PROJECT_PREFIX)_superset --project-directory $(ROOT)/src/superset --file $(ROOT)/src/superset/docker-compose.yaml
 
-.PHONY: help check-tools configure require-env network build up-core seed-reference \
+.PHONY: help check-tools configure require-env network build up-core \
 	bootstrap-airflow bootstrap-superset bootstrap up up-runtime down status logs doctor smoke
 
 help:
@@ -68,8 +68,7 @@ up-core: require-env network
 	@$(MINIO) up -d --wait minio
 	@$(CLICKHOUSE) up -d --wait clickhouse
 
-seed-reference: require-env network
-	@$(MINIO) --profile bootstrap run --rm minio-seed
+
 
 bootstrap-airflow: require-env network
 	@$(AIRFLOW) up -d --wait postgres
@@ -80,7 +79,7 @@ bootstrap-superset: require-env network
 	@$(SUPERSET) up -d --wait superset-db
 	@$(SUPERSET) run --rm --no-deps superset-init
 
-bootstrap: check-tools require-env network build up-core bootstrap-airflow seed-reference bootstrap-superset up-runtime doctor
+bootstrap: check-tools require-env network build up-core bootstrap-airflow bootstrap-superset up-runtime doctor
 
 up: up-core up-runtime
 
@@ -106,7 +105,7 @@ status: require-env
 logs: require-env
 	@if [ -n "$(SERVICE)" ]; then \
 		case "$(STACK):$(SERVICE)" in \
-			minio:minio|minio:minio-seed|clickhouse:clickhouse|airflow:postgres|airflow:airflow-permissions|airflow:airflow-init|airflow:airflow-apiserver|airflow:airflow-scheduler|airflow:airflow-dag-processor|airflow:airflow-triggerer|dbt:dbt|superset:superset-db|superset:superset-init|superset:superset) ;; \
+			minio:minio|clickhouse:clickhouse|airflow:postgres|airflow:airflow-permissions|airflow:airflow-init|airflow:airflow-apiserver|airflow:airflow-scheduler|airflow:airflow-dag-processor|airflow:airflow-triggerer|dbt:dbt|superset:superset-db|superset:superset-init|superset:superset) ;; \
 			*) echo "Invalid SERVICE for STACK=$(STACK): $(SERVICE)" >&2; exit 1 ;; \
 		esac; \
 	fi

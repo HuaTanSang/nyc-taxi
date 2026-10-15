@@ -24,24 +24,6 @@ services:
       - default
       - platform_net
 
-  minio-seed:
-    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z@sha256:aead63c77f9db9107f1696fb08ecb0faeda23729cde94b0f663edf4fe09728e3
-    profiles: ["bootstrap"]
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      RAW_BUCKET_NAME: ${RAW_BUCKET_NAME:-nyc-taxi-raw}
-      FORCE: ${FORCE:-0}
-    volumes:
-      - ../../data/reference:/reference:ro
-    entrypoint: ["/bin/sh", "/reference/seed-minio.sh"]
-    restart: "no"
-    networks:
-      - default
-
 volumes:
   minio_data:
 
