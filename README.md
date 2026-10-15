@@ -67,11 +67,7 @@ Ingestion writes monthly trip files below
 `nyc-taxi-raw/<taxi_type>/year=<year>/month=<month>/`, and the zone lookup and
 representative-point snapshots are stored below `nyc-taxi-raw/zone/`.
 
-`make seed-reference` verifies both committed reference files' SHA-256 values
-before uploading them. If a remote object has different content, seeding fails
-instead of overwriting it. Use `make seed-reference FORCE=1` only when
-intentionally replacing reference objects.
-
+Before running the pipeline for the first time, manually upload `taxi_zone_lookup.csv` and `taxi_zone_centroids.csv` to the `zone/` directory in the `nyc-taxi-raw` bucket.  
 ## Local endpoints
 
 | Service | Default URL | Login |
