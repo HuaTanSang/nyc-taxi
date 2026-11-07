@@ -89,7 +89,7 @@ def _representative_point(shape: shapefile.Shape) -> tuple[float, float]:
     boundaries = list(shape.parts) + [len(shape.points)]
     rings = [
         [(float(x), float(y)) for x, y in shape.points[start:end]]
-        for start, end in zip(boundaries, boundaries[1:], strict=True)
+        for start, end in zip(boundaries[:-1], boundaries[1:], strict=True)
         if end - start >= 3
     ]
     ring = max(rings, key=lambda candidate: abs(_ring_area(candidate)))
