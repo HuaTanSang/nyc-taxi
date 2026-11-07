@@ -1,24 +1,11 @@
-ARG SUPERSET_VERSION=6.0.0
-
-FROM apache/superset:${SUPERSET_VERSION}
+FROM apache/superset:6.0.0
 
 USER root
-
-COPY superset-requirements.txt /tmp/superset-requirements.txt
-
-RUN uv pip install \
-    --python /app/.venv/bin/python \
-    --no-cache \
-    --requirement /tmp/superset-requirements.txt
-
-COPY --chown=superset:superset \
-    superset_config.py \
-    /app/pythonpath/superset_config.py
-
-COPY --chown=superset:superset \
-    bootstrap \
-    /app/bootstrap
-
+COPY src/superset/superset-requirements.txt /tmp/superset-requirements.txt
+RUN uv pip install --python /app/.venv/bin/python --no-cache \
+    --requirement /tmp/superset-requirements.txt \
+    && uv pip check --python /app/.venv/bin/python
+COPY --chown=superset:superset src/superset/superset_config.py /app/pythonpath/superset_config.py
+COPY --chown=superset:superset src/superset/databricks_auth.py /app/pythonpath/databricks_auth.py
 ENV SUPERSET_CONFIG_PATH=/app/pythonpath/superset_config.py
-
 USER superset

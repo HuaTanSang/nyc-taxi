@@ -1,2 +1,5 @@
-clickhouse-connect==0.13.0
+apache-superset==6.0.0
+databricks-sqlalchemy==1.0.5
+databricks-sql-connector==4.4.0
+databricks-sdk==0.117.0
 psycopg2-binary==2.9.10

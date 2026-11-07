@@ -1,2 +1,4 @@
 dbt-core==1.11.12
-dbt-clickhouse==1.10.1
+dbt-databricks==1.13.0
+databricks-sql-connector==4.4.0
+databricks-sdk==0.117.0

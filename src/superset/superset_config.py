@@ -1,6 +1,8 @@
 import os
 from urllib.parse import quote_plus
 
+from databricks_auth import configure_databricks
+
 SECRET_KEY = os.environ["SUPERSET_SECRET_KEY"]
 
 postgres_user = quote_plus(os.environ["SUPERSET_POSTGRES_USER"])
@@ -22,3 +24,5 @@ ENABLE_PROXY_FIX = False
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
+
+DB_CONNECTION_MUTATOR = configure_databricks
