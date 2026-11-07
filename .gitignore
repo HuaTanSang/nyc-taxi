@@ -239,3 +239,6 @@ technique.md
 *.tfvars.json
 crash.log
 crash.*.log
+
+.agents/
+.claude/
