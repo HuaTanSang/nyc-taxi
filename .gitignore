@@ -227,6 +227,15 @@ src/dbt/.user.yml
 # Local artifacts produced during Codex conversations
 codex-artifacts/
 
-# testing
+# tmp file
 test.*
 technique.md 
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
