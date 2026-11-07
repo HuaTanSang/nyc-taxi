@@ -1,120 +1,93 @@
 # NYC Taxi Data Platform
 
-Local analytics platform built with Airflow, MinIO, ClickHouse, dbt, and
-Superset. Docker Compose projects are orchestrated through the root Makefile.
+Azure migration of the NYC TLC analytics platform:
+TLC → ADLS landing → Spark Bronze → dbt Silver/Gold → Superset.
+Airflow/Cosmos, dbt, Superset and two PostgreSQL metadata databases will run on
+an Azure VM; Databricks executes Spark and SQL.
 
-## Prerequisites
+The old on-premises Compose projects, MinIO/ClickHouse services and ClickHouse
+Superset bootstrap have been retired. Existing containers, volumes and local
+`.env` files are untouched by this repository change.
 
-- Docker Engine or Docker Desktop with Compose v2
-- At least 6 GiB assigned to Docker
-- OpenSSL and curl
+## Build and check images
 
-## First run
+Requires Docker Engine/Desktop. Run from the repository root:
 
 ```bash
-make configure
-make bootstrap
+make build
 make smoke
 ```
 
-`make configure` creates an ignored root `.env` from `.env.example` and
-generates missing local-development secrets. Run it for the initial setup and
-again only when adding or rotating configuration; it never replaces an existing
-secret. On Linux and WSL, it also records the current host user ID as
-`AIRFLOW_UID` so files written by Airflow have the expected ownership.
-`make bootstrap` builds the images, starts the core services, runs the one-shot
-initialization tasks, starts the runtime services, and verifies their health.
-For later starts, use `make up` followed by `make doctor` as needed.
+Build one image with `make build-airflow`, `make build-dbt` or
+`make build-superset`. Override the local tag with `IMAGE_TAG=<tag>` on both
+build and smoke commands. All Dockerfiles use the repository root as context;
+`.dockerignore` allows only application build inputs: Airflow requirements and
+the dbt project, and Superset requirements/configuration/OAuth code.
+Python unit tests, development scripts, documentation, infrastructure, local
+credentials/data and generated artifacts are excluded. Keep tests and tooling in
+Git for release validation; add future application source paths to the allowlist
+when their Dockerfiles need them. dbt SQL data tests remain in the images because
+they validate the demo data.
 
-The `minio_s3` and `clickhouse_default` Airflow connections are supplied through
-container environment variables. Airflow resolves them when parsing or running
-DAGs, but does not store or display them in the metadata database UI.
-
-The Superset bootstrap imports a database connection named
-`NYC Taxi ClickHouse`. Open SQL Lab, select that database, and run `SELECT 1`
-to explore the same ClickHouse instance used by dbt. The committed import
-template contains no credentials; `superset-init` renders the URI from the
-ignored root `.env` inside its one-shot container.
-
-When a prepared dashboard export is committed, `make bootstrap` also imports
-its datasets, charts, and dashboard. Follow the [dashboard guide](src/superset/SIMPLE_OVERVIEW_DASHBOARD.md)
-to create it once in Superset, export it safely, and share it through Git.
-
-Useful commands:
-
-```bash
-make status
-make logs STACK=airflow SERVICE=airflow-scheduler
-make down
-```
-
-`make down` stops containers without deleting named volumes. To run a second
-clone, use a distinct project prefix and host ports in that clone's `.env`:
-
-```bash
-make up PROJECT_PREFIX=nyc_taxi_second
-```
-
-The service-level `.env` files are deprecated. All Compose projects now receive
-configuration from the root `.env` and explicitly expose only the variables
-their containers need.
-
-## MinIO data contract
-
-The raw bucket is fixed at `nyc-taxi-raw`; `make configure` rejects a different
-`RAW_BUCKET_NAME` because Airflow and dbt must agree on the same object paths.
-Ingestion writes monthly trip files below
-`nyc-taxi-raw/<taxi_type>/year=<year>/month=<month>/`, and the zone lookup and
-representative-point snapshots are stored below `nyc-taxi-raw/zone/`.
-
-Before running the pipeline for the first time, manually upload `taxi_zone_lookup.csv` and `taxi_zone_centroids.csv` to the `zone/` directory in the `nyc-taxi-raw` bucket.  
-## Local endpoints
-
-| Service | Default URL | Login |
+| Image | Dockerfile | Contents |
 | --- | --- | --- |
-| MinIO API | `http://localhost:9000` | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` |
-| MinIO console | `http://localhost:9001` | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` |
-| ClickHouse HTTP | `http://localhost:8123` | `CLICKHOUSE_USER` / `CLICKHOUSE_PASSWORD` |
-| Airflow | `http://localhost:8080` | `AIRFLOW_ADMIN_USERNAME` / `AIRFLOW_ADMIN_PASSWORD` |
-| dbt docs | `http://localhost:8050` | none |
-| Superset | `http://localhost:8088` | `SUPERSET_ADMIN_USERNAME` / `SUPERSET_ADMIN_PASSWORD` |
+| `nyc-taxi-airflow` | [Airflow](src/airflow/dockerfile) | Airflow 3.2.2/Python 3.12, Cosmos, Databricks provider, Azure SDKs and dbt source; no active DAGs yet |
+| `nyc-taxi-dbt` | [dbt](src/dbt/dockerfile) | Python 3.12, dbt-core 1.11.12, dbt-databricks 1.13.0; CLI tool, no permanent service |
+| `nyc-taxi-superset` | [Superset](src/superset/dockerfile) | Superset 6.0.0, PostgreSQL driver and Databricks SQLAlchemy 1.0.5 with OAuth M2M |
 
-All credentials are stored in the ignored root `.env`. Trigger the parent taxi
-pipeline from the Airflow UI after the platform passes `make doctor` and
-`make smoke`. `make doctor` validates every Compose file, checks the current
-Docker network and container states, resolves the Airflow connections, and
-runs `SELECT 1` through Superset's imported ClickHouse connection. `make smoke`
-verifies the service endpoints and runs `dbt parse`.
+`make smoke` runs temporary containers with networking disabled. It imports
+Airflow/Cosmos `DBT_RUNNER`, dbt and the Databricks integrations, checks dbt
+source packaging and the empty active DAG directory, and tests Superset's OAuth hook. It uses no runtime
+credentials and does not initialize metadata databases or call Azure.
+The Superset unit test is passed from the host checkout over stdin; it is not
+copied into the image. The temporary connection smoke DAG/project and offline dbt target have been
+removed. These checks do not parse/compile the business graph, build a manifest
+or prove connectivity to Databricks.
 
-## Persistence and maintenance
+## Runtime configuration
 
-Named volumes preserve MinIO objects, ClickHouse data, Airflow metadata and
-logs, and Superset metadata across `make down`. Rebuild an image after changing
-its Dockerfile or Python requirements with `make build`, then run `make up`.
-The standalone dbt container bind-mounts `src/dbt`, so it sees model and macro
-edits immediately. Airflow uses a dbt project and manifest baked into its image;
-after changing dbt code used by a DAG, rebuild and restart the Airflow services.
-After changing the Superset bootstrap template or helper, run `make build` and
-`make bootstrap-superset`. If only the ClickHouse credentials or database name
-change in `.env`, rerun `make bootstrap-superset` to update the existing
-connection with the same stable UUID.
+Use [.env.example](.env.example) as the Azure configuration template. Keep the
+runtime `.env` outside images/Git, restrict its permissions and keep an encrypted
+recovery copy outside the VM. Preserve existing application keys when restoring
+metadata. The template is not usable until its placeholders are supplied.
 
-To rotate an application secret, first run `make down`, replace its value in
-`.env` (or set it to `__GENERATE__`), and rerun `make configure`. Database and
-storage credentials also live inside persistent service state; rotate those in
-the service itself or recreate the corresponding local-development volume.
+Airflow/dbt use the pipeline principal (`DATABRICKS_CLIENT_ID` and
+`DBT_ENV_SECRET_DATABRICKS_CLIENT_SECRET`). Superset uses the separate reader
+principal (`DATABRICKS_SUPERSET_CLIENT_ID` / `_CLIENT_SECRET`). Both use
+`DATABRICKS_HOST`; dbt additionally uses the Warehouse HTTP path, catalog and
+schema. Terraform must create the schema and grant access first.
 
-A full data reset is intentionally not a Make target. After `make down`, inspect
-the exact project volumes with:
+The dbt image defaults to `/usr/app/dbt`. Supply the actual target schema in
+`DATABRICKS_SCHEMA`; the image contains the original business project as migration
+source. Its ClickHouse SQL is not yet compatible with the Databricks profile.
 
-```bash
-docker volume ls --filter label=com.docker.compose.project=nyc_taxi_airflow
+When Superset is deployed, use a database URI without credentials:
+
+```text
+databricks://<workspace-host>?http_path=/sql/1.0/warehouses/<id>&catalog=<catalog>&schema=<schema>
 ```
 
-Remove only the named volumes you intend to discard with `docker volume rm`.
-This is destructive and cannot be undone.
+The configuration hook supplies the reader's OAuth credentials provider. Never
+put a PAT or client secret in the URI. Live login, token renewal, reader grants
+and denied writes still need integration checks.
 
-If `make check-tools` cannot reach Docker from WSL, enable Docker Desktop's WSL
-integration for the distribution. If a service does not become healthy, use
-`make status` and `make logs STACK=<stack> [SERVICE=<service>]` before retrying
-the idempotent bootstrap.
+## Migration status
+
+Infrastructure work is paused at the reviewed bootstrap plan. These images
+currently prepare dependencies and source only. Azure Compose/bootstrap, provisioning,
+metadata backup/restore and deployment are still phase 2 work; there is no
+`make up` or automatic cloud deployment yet. UI access will use loopback ports
+and SSH tunnels on the VM.
+
+Business SQL under `src/dbt/models`, macros and tests, and the original DAGs
+under `src/airflow/dags` remain as migration reference. They still target the
+old platform and are not an operational Azure pipeline. No DAGs or manifest
+are currently installed/generated in the Airflow image. At phase 3, port the
+full graph and package the actual DAGs/dbt/manifest together before running
+January 2025 for Yellow, Green, FHV and FHVHV, then replaying that source month.
+
+Dashboard metrics and chart definitions remain in the [business reference](src/superset/SIMPLE_OVERVIEW_DASHBOARD.md).
+
+Reference CSV generation remains in `scripts/generate_taxi_zone_centroids.py`.
+Keep the existing local reference CSV pair for Azure bootstrap; ADLS publication
+and validation come with ingestion work.

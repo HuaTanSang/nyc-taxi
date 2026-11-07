@@ -1,31 +1,14 @@
-# Hướng dẫn tạo NYC Taxi dashboard trong Superset
+# NYC Taxi dashboard: tham chiếu nghiệp vụ
 
-Bạn tạo dashboard **một lần** bằng giao diện Superset. Sau khi export, dùng công cụ
-trong repo để chuẩn bị file ZIP an toàn cho Git. Các máy clone repo sẽ import sẵn
-dashboard khi chạy `make bootstrap`; việc nạp thêm tháng chỉ cập nhật dữ liệu,
-không cần tạo hoặc export lại biểu đồ.
-
-Tên dashboard và chart dưới đây dùng tiếng Anh để dễ chia sẻ dự án trên LinkedIn.
-Các số liệu insight chỉ nên viết sau khi đã nạp và kiểm tra dữ liệu thật.
-
-## 0. Chuẩn bị
-
-1. Chạy `make configure` rồi `make bootstrap`. Mở Superset tại
-   `http://localhost:8088` bằng tài khoản trong file `.env` của bạn.
-2. Chạy pipeline Airflow cho ít nhất một tháng để dbt tạo các mart. Nếu chưa có
-   mart, Superset chưa thể đăng ký dataset từ ClickHouse.
-3. Trong **SQL Lab**, chọn database **NYC Taxi ClickHouse** và thử:
-
-   ```sql
-   SELECT count() FROM marts.mart_trip_daily;
-   ```
-
-   Số dòng có thể ít lúc đầu; dashboard sẽ tự mở rộng khi các tháng 2025 và 2026
-   được nạp thêm. DAG hiện được kích hoạt thủ công.
+Giữ lại các dataset, metric và chart dưới đây làm tham chiếu khi chuyển
+Superset sang Databricks ở phase 3. Deployment/connection ClickHouse và công cụ
+export/bootstrap cũ đã bỏ. Dashboard migration do chủ dự án thực hiện sau khi
+các mart Azure sẵn sàng; xem README.md ở root cho tình trạng runtime hiện tại.
+Tên schema và SQL expression cần đối chiếu lại với model sau khi port.
 
 ## 1. Đăng ký bốn dataset
 
-Vào **Data → Datasets → + Dataset**, chọn database **NYC Taxi ClickHouse**,
+Vào **Data → Datasets → + Dataset**, chọn database Databricks reader đã cấu hình,
 schema `marts`, rồi thêm từng bảng sau:
 
 | Dataset | Cột thời gian (Temporal) | Vai trò |
@@ -65,7 +48,7 @@ Trong dataset `mart_trip_hourly`, tạo calculated column `weekday_label` để
 heatmap luôn sắp thứ tự Thứ Hai → Chủ Nhật:
 
 ```sql
-concat(toString(pickup_day_of_week), ' ', pickup_day_name)
+concat(cast(pickup_day_of_week as string), ' ', pickup_day_name)
 ```
 
 ## 2. Tạo chart
@@ -126,42 +109,3 @@ câu hỏi từ chart: dịch vụ nào tăng/giảm theo tháng, giờ nào đ�
 và zone nào đứng đầu. Chỉ so sánh cùng tháng 2025–2026 sau khi cả hai tháng
 đã được nạp đủ. Ghi số liệu thật và khoảng ngày đã chọn trên ảnh/bài đăng;
 không suy diễn số liệu từ chart chưa hoàn chỉnh.
-
-## 4. Export một lần để máy khác có sẵn dashboard
-
-Sau khi kiểm tra chart và filter, mở dashboard, chọn **Export** từ menu hành
-động của dashboard (hoặc trang danh sách Dashboards) và tải **dashboard ZIP**.
-Chọn export dashboard thông thường, không chọn **Export as example**, vì loại
-example có thể kèm bản sao dữ liệu. ZIP dashboard của Superset bao gồm chart,
-dataset và định nghĩa database liên quan.
-
-Chạy lệnh dưới đây từ root repo; thay đường dẫn bằng file bạn vừa tải:
-
-```bash
-python3 src/superset/bootstrap/prepare_dashboard_export.py /path/to/dashboard_export.zip
-```
-
-Công cụ kiểm tra định dạng export, UUID kết nối ClickHouse, đúng bốn dataset
-`marts`, chart references, đường dẫn ZIP và dấu hiệu credential. Nó **thay toàn
-bộ cấu hình database** trong ZIP bằng template không chứa mật khẩu của repo,
-rồi tạo `src/superset/bootstrap/dashboard/nyc_taxi_overview.zip`. Nếu bạn đã
-chuẩn bị một export trước đó và muốn cập nhật, thêm `--replace`.
-
-Chỉ commit file ZIP **đã chuẩn bị**, không commit ZIP tải trực tiếp từ Superset:
-
-```bash
-git add src/superset/bootstrap/dashboard/nyc_taxi_overview.zip
-```
-
-Sau khi thay bundle, chạy `make bootstrap` để build lại image và import bản
-mới. Trên máy clone repo, `make configure && make bootstrap` sẽ import kết nối,
-dataset, chart và dashboard. Chạy bootstrap nhiều lần dùng UUID để cập nhật
-asset hiện có, không tạo bản sao. Nếu chưa commit ZIP thì bootstrap chỉ tạo
-kết nối ClickHouse và in lời nhắc; việc tạo dashboard thủ công vẫn làm được.
-Khi bạn chỉnh chart trong UI về sau, export lại và chạy công cụ `--replace` để
-đưa phiên bản mới lên Git.
-
-Dashboard đọc trực tiếp các mart hiện có. Sau mỗi lần pipeline nạp tháng mới,
-làm mới trang sẽ thấy dữ liệu mới; không cần export lại. Nếu để trang mở lâu,
-có thể bật auto-refresh trong menu dashboard, nhưng thiết lập này chỉ áp dụng
-cho phiên đang mở.
