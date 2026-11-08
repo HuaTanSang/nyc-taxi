@@ -73,8 +73,10 @@ and denied writes still need integration checks.
 
 ## Migration status
 
-Infrastructure work is paused at the reviewed bootstrap plan. These images
-currently prepare dependencies and source only. Azure Compose/bootstrap, provisioning,
+Terraform will use local state on the owner's machine. The remote-state bootstrap
+stack has been removed; keep local state and backups outside Git/images, with an
+encrypted recovery copy outside the machine. Application infrastructure is not
+yet implemented. These images currently prepare dependencies and source only. Azure Compose/bootstrap, provisioning,
 metadata backup/restore and deployment are still phase 2 work; there is no
 `make up` or automatic cloud deployment yet. UI access will use loopback ports
 and SSH tunnels on the VM.
